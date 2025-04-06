@@ -1,17 +1,22 @@
 import { Module } from '@nestjs/common';
 import { DATABASE_CONNECTION } from './database-connection';
 import { ConfigService } from '@nestjs/config';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import * as schema from './schema';
 @Module({
   providers: [
     {
       provide: DATABASE_CONNECTION,
       useFactory: (configService: ConfigService) => {
-        const sqlite = new Database('sqlite.db');
-        return drizzle(sqlite, {
-          schema: {},
+        const pool = new Pool({
+          connectionString: configService.getOrThrow('DATABASE_URL'),
+        });
+
+        return drizzle(pool, {
+          schema: {
+            ...schema,
+          },
         });
       },
       inject: [ConfigService],
