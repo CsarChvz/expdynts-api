@@ -1,27 +1,27 @@
-# Usar Bun slim como base
 FROM oven/bun:1.2.8-slim
 
-# Evitar crear archivos extras con npm/bun
+# Set environment variables to avoid compilation
+ENV BETTER_SQLITE3_USE_PREBUILT=true
 ENV NODE_ENV=production
 
-# Crear y establecer el directorio de trabajo
+# Add Python for any builds that might still be necessary
+RUN apt-get update && apt-get install -y \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copiar solo los archivos necesarios para la instalación
+# Copy package files
 COPY package.json bun.lock* ./
 
-# Instalar solo dependencias de producción y limpiar caché
+# Install dependencies
 RUN bun install --frozen-lockfile --production && \
     rm -rf /root/.bun/install/cache
 
-# Copiar el código con exclusiones específicas usando .dockerignore
+# Copy application code
 COPY . .
 
-# Exponer el puerto de la aplicación
+# Expose port and set start command
 EXPOSE 3000
-
-# Eliminar la línea problemática de cambio de usuario
-# USER node
-
-# Usar exec form para CMD y configurar para producción
 CMD ["bun", "run", "start"]

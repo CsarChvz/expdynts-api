@@ -21,7 +21,7 @@ const logger = {
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false }), // Habilita logs de Fastify
+    new FastifyAdapter({ logger: logger }), // Habilita logs de Fastify
   );
 
   await app.register(fastifyCors);
