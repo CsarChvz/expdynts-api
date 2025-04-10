@@ -18,10 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refresh'),
-      secretOrKey: jwtSecret, // Obtiene el secret directamente
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: jwtSecret,
       ignoreExpiration: false,
-      passReqToCallback: true,
     });
   }
 
