@@ -12,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly authService: AuthService,
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
-        
+    console.log(jwtSecret);
     if (!jwtSecret) {
         throw new NotFoundException('JWT_SECRET is not defined');
     }
