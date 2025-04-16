@@ -8,6 +8,6 @@ import { DatabaseModule } from 'src/database/database.module';
 @Module({
   imports: [TerminusModule, DatabaseModule],
   controllers: [HealthController],
-  providers: [ DatabaseHealthIndicator], 
+  providers: [DatabaseHealthIndicator],
 })
 export class HealthModule {}
