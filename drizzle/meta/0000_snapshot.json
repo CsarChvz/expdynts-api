@@ -243,16 +243,12 @@
         "usuario_external_id_unique": {
           "name": "usuario_external_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "external_id"
-          ]
+          "columns": ["external_id"]
         },
         "usuario_email_unique": {
           "name": "usuario_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -332,12 +328,8 @@
           "name": "usuario_expedientes_usuario_id_usuario_id_fk",
           "tableFrom": "usuario_expedientes",
           "tableTo": "usuario",
-          "columnsFrom": [
-            "usuario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["usuario_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -345,12 +337,8 @@
           "name": "usuario_expedientes_expediente_id_expedientes_id_fk",
           "tableFrom": "usuario_expedientes",
           "tableTo": "expedientes",
-          "columnsFrom": [
-            "expediente_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expediente_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -366,38 +354,22 @@
     "public.busqueda_status": {
       "name": "busqueda_status",
       "schema": "public",
-      "values": [
-        "CHECKED",
-        "UNCHECKED"
-      ]
+      "values": ["CHECKED", "UNCHECKED"]
     },
     "public.extracto": {
       "name": "extracto",
       "schema": "public",
-      "values": [
-        "ZM",
-        "FRNS",
-        "PENALT",
-        "POPF",
-        "LABORAL"
-      ]
+      "values": ["ZM", "FRNS", "PENALT", "POPF", "LABORAL"]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "ADMIN",
-        "USER",
-        "MODERATOR"
-      ]
+      "values": ["ADMIN", "USER", "MODERATOR"]
     },
     "public.status": {
       "name": "status",
       "schema": "public",
-      "values": [
-        "ACTIVE",
-        "INACTIVE"
-      ]
+      "values": ["ACTIVE", "INACTIVE"]
     }
   },
   "schemas": {},
