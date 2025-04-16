@@ -24,9 +24,7 @@ import * as schema from './schema';
         const sql = neon(configService.getOrThrow('DATABASE_URL'));
         return drizzle({
           client: sql,
-          schema: {
-            ...schema,
-          },
+          schema: schema,
         });
       },
       inject: [ConfigService],

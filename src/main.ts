@@ -7,6 +7,8 @@ import compression from '@fastify/compress';
 import fastifyEtag from '@fastify/etag';
 import fastifyCors from '@fastify/cors';
 
+
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 const logger = {
   transport: {
     target: 'pino-pretty',
@@ -39,9 +41,14 @@ async function bootstrap() {
     expiresIn: 3600,
   });
 
+  const config = new DocumentBuilder()
+    .setTitle('Expedientes API')
+    .setDescription('Gestión de expedientes')
+    .setVersion('1.0')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, documentFactory);
+
   await app.listen(8000, '0.0.0.0');
-  console.log(
-    `Servidor corriendo en http://localhost:3000 con Bun y Fastify 🚀`,
-  );
 }
 bootstrap();
