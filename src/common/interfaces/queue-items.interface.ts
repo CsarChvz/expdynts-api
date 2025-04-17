@@ -1,4 +1,3 @@
-// Interfaz para los elementos de la cola 'exps'
 export interface ExpQueueItem {
   id: string;
   data: any;
@@ -6,6 +5,13 @@ export interface ExpQueueItem {
   status: "pending" | "processing" | "completed" | "failed";
   retries?: number;
   shouldNotify?: boolean;
+}
+
+export interface ExpJobResult {
+  id: string;
+  processed: boolean;
+  processingTime: number;
+  result: string;
 }
 
 // Interfaz para los elementos de la cola 'notifications'
@@ -17,14 +23,6 @@ export interface NotificationQueueItem {
   content: any;
   status: "pending" | "sent" | "failed";
   retries?: number;
-}
-
-// src/modules/queue/interfaces/queue-job-results.interface.ts
-export interface ExpJobResult {
-  id: string;
-  processed: boolean;
-  processingTime: number;
-  result: string;
 }
 
 export interface NotificationJobResult {

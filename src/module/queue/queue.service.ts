@@ -77,7 +77,7 @@ export class QueueService {
     }
   }
 
-  async getQueuesMetrics() {
+  async getQueueMetrics() {
     const [
       expsCount,
       expsActive,

@@ -3,9 +3,11 @@ import { QueueService } from "./queue.service";
 import { QueueController } from "./queue.controller";
 import { BullModule } from "@nestjs/bullmq";
 import { QUEUE_NAMES } from "src/common/constants/queue.constants";
+import { ExpsConsumer } from "./consumers/exps.consumer";
+import { NotificationsConsumer } from "./consumers/notificationts.consumer";
 @Module({
   controllers: [QueueController],
-  providers: [QueueService],
+  providers: [QueueService, ExpsConsumer, NotificationsConsumer],
   exports: [QueueService],
   imports: [
     BullModule.registerQueue(

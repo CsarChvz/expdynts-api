@@ -6,6 +6,7 @@ import { CommonModule } from "./common/common.module";
 import { QueueModule } from "./module/queue/queue.module";
 import { CronModule } from "./module/cron/cron.module";
 import { BullModule } from "@nestjs/bullmq";
+import { DataModule } from "./module/data/data.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -15,7 +16,6 @@ import { BullModule } from "@nestjs/bullmq";
         connection: {
           host: configService.get<string>("redis.host", "localhost"),
           port: configService.get<number>("redis.port", 6379),
-          password: configService.get<string>("redis.password", ""),
         },
         defaultJobOptions: {
           attempts: 3,
@@ -32,6 +32,7 @@ import { BullModule } from "@nestjs/bullmq";
     CommonModule,
     QueueModule,
     CronModule,
+    DataModule,
   ],
 })
 export class AppModule {}
