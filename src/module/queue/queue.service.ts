@@ -93,12 +93,12 @@ export class QueueService {
     ] = await Promise.all([
       this.expsQueue.count(),
       this.expsQueue.getActiveCount(),
-      this.expsQueue.getDelayedCount(),
+      this.expsQueue.getWaitingCount(),
       this.expsQueue.getFailedCount(),
       this.expsQueue.getCompletedCount(),
       this.notificationsQueue.count(),
       this.notificationsQueue.getActiveCount(),
-      this.notificationsQueue.getDelayedCount(),
+      this.notificationsQueue.getWaitingCount(),
       this.notificationsQueue.getFailedCount(),
       this.notificationsQueue.getCompletedCount(),
     ]);
