@@ -19,6 +19,7 @@ import { DatabaseModule } from "./database/database.module";
         connection: {
           host: configService.get<string>("redis.host", "localhost"),
           port: configService.get<number>("redis.port", 6379),
+          password: configService.get<string>("redis.password", ""),
         },
         defaultJobOptions: {
           attempts: 3,
