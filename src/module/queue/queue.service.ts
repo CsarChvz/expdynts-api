@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
@@ -116,6 +117,56 @@ export class QueueService {
         failed: notificationsFailed,
         completed: notificationsCompleted,
       },
+    };
+  }
+
+  async addExperimentJob(data: any, opts?: any) {
+    this.logger.log(`Adding experiment job with data: ${JSON.stringify(data)}`);
+    const job = await this.expsQueue.add("process-experiment", data, opts);
+    return { id: job.id, name: job.name };
+  }
+
+  async addNotificationJob(data: any, opts?: any) {
+    this.logger.log(
+      `Adding notification job with data: ${JSON.stringify(data)}`,
+    );
+    const job = await this.notificationsQueue.add(
+      "send-notification",
+      data,
+      opts,
+    );
+    return { id: job.id, name: job.name };
+  }
+
+  async getExpsQueueStatus() {
+    const [waiting, active, completed, failed] = await Promise.all([
+      this.expsQueue.getWaitingCount(),
+      this.expsQueue.getActiveCount(),
+      this.expsQueue.getCompletedCount(),
+      this.expsQueue.getFailedCount(),
+    ]);
+
+    return {
+      waiting,
+      active,
+      completed,
+      failed,
+    };
+  }
+
+  async getNotificationsQueueStatus() {
+    const [waiting, active, completed, failed] = await Promise.all([
+      this.notificationsQueue.getWaitingCount(),
+      this.notificationsQueue.getActiveCount(),
+      this.notificationsQueue.getCompletedCount(),
+      this.notificationsQueue.getFailedCount(),
+    ]);
+
+    return {
+      waiting,
+      active,
+      completed,
+      failed,
     };
   }
 }

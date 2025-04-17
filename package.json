@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@bull-board/nestjs": "^6.9.1",
     "@fastify/caching": "^9.0.3",
     "@fastify/compress": "^8.0.1",
     "@fastify/cors": "^11.0.1",
