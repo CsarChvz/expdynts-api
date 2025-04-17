@@ -13,7 +13,7 @@ export class DataService {
     this.logger.log("Obteniendo elementos pendientes de la base de datos");
 
     // Simulamos entre 1 y 5 elementos cada vez
-    const itemCount = Math.floor(Math.random() * 5) + 1;
+    const itemCount = Math.floor(Math.random() * 12) + 1;
     const items: any[] = [];
 
     for (let i = 0; i < itemCount; i++) {

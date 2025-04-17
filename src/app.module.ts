@@ -7,9 +7,12 @@ import { QueueModule } from "./module/queue/queue.module";
 import { CronModule } from "./module/cron/cron.module";
 import { BullModule } from "@nestjs/bullmq";
 import { DataModule } from "./module/data/data.module";
+import configuration from "./config/configuration";
+import { DatabaseModule } from "./database/database.module";
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -28,6 +31,7 @@ import { DataModule } from "./module/data/data.module";
       }),
       inject: [ConfigService],
     }),
+    DatabaseModule,
     PostsModule,
     CommonModule,
     QueueModule,
