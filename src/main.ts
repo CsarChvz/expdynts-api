@@ -13,63 +13,46 @@ import fastifyEtag from "@fastify/etag";
 import fastifyCors from "@fastify/cors";
 
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
+const logger = {
+  transport: {
+    target: "pino-pretty",
+    options: {
+      translateTime: "HH:MM:ss Z",
+      ignore: "pid,hostname",
+      colorize: true,
+    },
+  },
+};
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({
-      // opcional: también puedes forzar cierre aquí a nivel de Fastify
-      forceCloseConnections: true, // destruye conexiones HTTP al close :contentReference[oaicite:3]{index=3}
-      keepAliveTimeout: 0, // cierra sockets keep‑alive inmediatamente :contentReference[oaicite:4]{index=4}
-      logger: {
-        transport: {
-          target: "pino-pretty",
-          options: {
-            translateTime: "HH:MM:ss Z",
-            ignore: "pid,hostname",
-            colorize: true,
-          },
-        },
-      },
-    }),
-    {
-      forceCloseConnections: true, // destruye conexiones HTTP al shutdown :contentReference[oaicite:5]{index=5}
-    },
+    new FastifyAdapter({ logger: logger }),
   );
 
-  // registra hooks para los lifecycle events de shutdown
-  app.enableShutdownHooks();
-
-  // registro de tus plugins Fastify
   await app.register(fastifyCors);
   await app.register(compression, {
     encodings: ["gzip", "br"],
     threshold: 5120,
   });
-  await app.register(fastifyEtag, { weak: true });
-  await app.register(fastifyCaching, { privacy: "private", expiresIn: 3600 });
 
-  // Swagger
+  await app.register(fastifyEtag, {
+    weak: true,
+  });
+
+  await app.register(fastifyCaching, {
+    privacy: "private",
+    expiresIn: 3600,
+  });
+
   const config = new DocumentBuilder()
     .setTitle("Expedientes API")
     .setDescription("Gestión de expedientes")
     .setVersion("1.0")
     .build();
-  SwaggerModule.setup("docs", app, () =>
-    SwaggerModule.createDocument(app, config),
-  );
-
-  const server = await app.listen(8000, "0.0.0.0");
-
-  // Obtén el servicio de shutdown y configúralo con el servidor
-  const idleShutdownService = app.get(IdleShutdownService);
-  idleShutdownService.setServer(server);
-
-  // Intercepta las peticiones para registrar actividad
-  app.use((req, res, next) => {
-    app.get(IdleShutdownService).registerActivity();
-    next();
-  });
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("docs", app, documentFactory);
+  app.enableShutdownHooks();
+  await app.listen(8000, "0.0.0.0");
 }
 bootstrap();

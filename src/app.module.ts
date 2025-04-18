@@ -9,7 +9,6 @@ import { BullModule } from "@nestjs/bullmq";
 import { DataModule } from "./module/data/data.module";
 import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
-import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
 
 @Module({
   imports: [
@@ -42,6 +41,5 @@ import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
     CronModule,
     DataModule,
   ],
-  providers: [IdleShutdownService],
 })
 export class AppModule {}
