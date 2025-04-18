@@ -12,8 +12,6 @@ RUN bun install --frozen-lockfile --production && \
 # Copy application code
 COPY . .
 
-# Optional: Copy env file (not needed if using --env-file in docker run)
-COPY .env .env
 
 EXPOSE 8000
 CMD ["bun", "run", "start"]
