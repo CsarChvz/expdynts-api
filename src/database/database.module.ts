@@ -21,7 +21,7 @@ import * as schema from "./schema";
         //     ...schema,
         //   },
         // });
-        neonConfig.fetchConnectionCache = false; 
+        neonConfig.fetchConnectionCache = false;
         const sql = neon(configService.getOrThrow("DATABASE_URL"));
         return drizzle({
           client: sql,

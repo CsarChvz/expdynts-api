@@ -9,6 +9,7 @@ import { BullModule } from "@nestjs/bullmq";
 import { DataModule } from "./module/data/data.module";
 import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
+import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
 
 @Module({
   imports: [
@@ -20,6 +21,9 @@ import { DatabaseModule } from "./database/database.module";
           host: configService.get<string>("redis.host", "localhost"),
           port: configService.get<number>("redis.port", 6379),
           password: configService.get<string>("redis.password", ""),
+          maxRetriesPerRequest: 2,
+          enableReadyCheck: false,
+          disconnectTimeout: 2000,
         },
         defaultJobOptions: {
           attempts: 3,
@@ -39,5 +43,6 @@ import { DatabaseModule } from "./database/database.module";
     CronModule,
     DataModule,
   ],
+  providers: [IdleShutdownService],
 })
 export class AppModule {}

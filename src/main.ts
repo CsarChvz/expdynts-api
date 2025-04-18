@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
@@ -12,6 +13,7 @@ import fastifyEtag from "@fastify/etag";
 import fastifyCors from "@fastify/cors";
 
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -37,7 +39,7 @@ async function bootstrap() {
   );
 
   // registra hooks para los lifecycle events de shutdown
-  app.enableShutdownHooks(); // habilita onModuleDestroy/onApplicationShutdown :contentReference[oaicite:6]{index=6}
+  app.enableShutdownHooks();
 
   // registro de tus plugins Fastify
   await app.register(fastifyCors);
@@ -58,6 +60,16 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, config),
   );
 
-  await app.listen(8000, "0.0.0.0");
+  const server = await app.listen(8000, "0.0.0.0");
+
+  // Obtén el servicio de shutdown y configúralo con el servidor
+  const idleShutdownService = app.get(IdleShutdownService);
+  idleShutdownService.setServer(server);
+
+  // Intercepta las peticiones para registrar actividad
+  app.use((req, res, next) => {
+    app.get(IdleShutdownService).registerActivity();
+    next();
+  });
 }
 bootstrap();
