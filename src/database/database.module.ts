@@ -3,7 +3,7 @@ import { DATABASE_CONNECTION } from "./database-connection";
 import { ConfigService } from "@nestjs/config";
 // import { drizzle } from 'drizzle-orm/node-postgres';
 // import { Pool } from 'pg';
-import { neon } from "@neondatabase/serverless";
+import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
 import * as schema from "./schema";
@@ -21,6 +21,7 @@ import * as schema from "./schema";
         //     ...schema,
         //   },
         // });
+        neonConfig.fetchConnectionCache = false; 
         const sql = neon(configService.getOrThrow("DATABASE_URL"));
         return drizzle({
           client: sql,
