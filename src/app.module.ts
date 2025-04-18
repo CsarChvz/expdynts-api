@@ -21,7 +21,6 @@ import { IdleShutdownService } from "./idle-shutdown/idle-shutdown.service";
           host: configService.get<string>("redis.host", "localhost"),
           port: configService.get<number>("redis.port", 6379),
           password: configService.get<string>("redis.password", ""),
-          maxRetriesPerRequest: 2,
           enableReadyCheck: false,
           disconnectTimeout: 2000,
         },
