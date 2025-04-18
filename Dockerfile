@@ -33,6 +33,7 @@ COPY --from=builder --chown=bunuser:bunuser /build/.env ./.env
 # Cambiar al usuario no privilegiado
 USER bunuser
 
+#Expose
 EXPOSE 8000
 
 # Usar un comando más específico según tu aplicación
