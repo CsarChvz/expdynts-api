@@ -27,9 +27,6 @@ COPY --from=builder --chown=bunuser:bunuser /build/package.json ./package.json
 COPY --from=builder --chown=bunuser:bunuser /build/src ./src
 COPY --from=builder --chown=bunuser:bunuser /build/public ./public
 
-# Copiar el archivo .env si existe
-COPY --from=builder --chown=bunuser:bunuser /build/.env ./.env
-
 # Cambiar al usuario no privilegiado
 USER bunuser
 
