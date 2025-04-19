@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { QueueService } from "../queue/queue.service";
 import { DataService } from "../data/data.service";
 import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { v4 as uuidv4 } from "uuid";
 @Injectable()
-export class CronService implements OnModuleInit {
+export class CronService {
   private readonly logger = new Logger(CronService.name);
   private readonly dataFetchInterval: string;
   private isEnabled = true;
@@ -22,12 +22,6 @@ export class CronService implements OnModuleInit {
       "cron.dataFetchInterval",
       CronExpression.EVERY_10_SECONDS,
     );
-  }
-
-  async onModuleInit() {
-    // Iniciar con una carga inicial de datos
-    this.logger.log("Inicializando carga inicial de datos");
-    await this.fetchDataAndAddToQueue();
   }
 
   @Cron("cronTime")
