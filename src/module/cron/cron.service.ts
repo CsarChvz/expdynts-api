@@ -16,15 +16,9 @@ export class CronService {
     private readonly queueService: QueueService,
     private readonly dataService: DataService,
     private readonly configService: ConfigService,
-  ) {
-    // Obtener la configuración del cron
-    this.dataFetchInterval = this.configService.get<string>(
-      "cron.dataFetchInterval",
-      CronExpression.EVERY_10_SECONDS,
-    );
-  }
+  ) {}
 
-  @Cron("cronTime")
+  @Cron(CronExpression.EVERY_DAY_AT_9AM)
   async fetchDataAndAddToQueue() {
     if (!this.isEnabled) {
       this.logger.debug("Cron deshabilitado. Saltando ejecución");

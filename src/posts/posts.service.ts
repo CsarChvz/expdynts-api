@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Inject, Injectable } from "@nestjs/common";
-import { CreatePostDto } from "./dto/create-post.dto";
-import { UpdatePostDto } from "./dto/update-post.dto";
 import { DATABASE_CONNECTION } from "src/database/database-connection";
 import * as schema from "../database/schema";
 import { NeonHttpDatabase } from "drizzle-orm/neon-http";
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
-
+import { HttpService } from "@nestjs/axios";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { lastValueFrom } from "rxjs";
 @Injectable()
 export class PostsService {
   constructor(
@@ -14,25 +16,35 @@ export class PostsService {
 
     @Inject(DATABASE_CONNECTION)
     private readonly database: NeonHttpDatabase<typeof schema>,
+    private readonly httpService: HttpService,
   ) {}
-
-  create(createPostDto: CreatePostDto) {
-    return "This action adds a new post";
-  }
 
   async findAll() {
     return await this.database.query.posts.findFirst();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
-  }
+  async checkProxy() {
+    const login = "a698053eb4a3eeaabac6";
+    const password = "9ce98dafba032b0f";
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
+    const httpsAgent = new HttpsProxyAgent(
+      `http://${login}:${password}@gw.dataimpulse.com:823/`,
+    );
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+    // const login = "brd.superproxy.io";
+    // const password = "rcauvdgwqk5y";
+
+    // const httpsAgent = new HttpsProxyAgent(
+    //   "http://brd-customer-hl_6e97d2e6-zone-datacenter_proxy1:9lhja4a0qr1e@brd.superproxy.io:33335/",
+    // );
+
+    const result = await lastValueFrom(
+      this.httpService.get("https://geo.brdtest.com/mygeo.json", {
+        httpsAgent,
+      }),
+    );
+
+    console.log(result.data); // Para ver el contenido de la respuesta
+    return result.data;
   }
 }

@@ -9,6 +9,7 @@ import { BullModule } from "@nestjs/bullmq";
 import { DataModule } from "./module/data/data.module";
 import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { DatabaseModule } from "./database/database.module";
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     PostsModule,
     CommonModule,
