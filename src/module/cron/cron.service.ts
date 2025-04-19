@@ -3,7 +3,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { QueueService } from "../queue/queue.service";
 import { DataService } from "../data/data.service";
-import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { v4 as uuidv4 } from "uuid";
 @Injectable()
@@ -15,7 +14,6 @@ export class CronService {
   constructor(
     private readonly queueService: QueueService,
     private readonly dataService: DataService,
-    private readonly configService: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
