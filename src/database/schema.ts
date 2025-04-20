@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern */
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 // schema.ts
@@ -48,30 +49,29 @@ export const estadoBusqueda = pgEnum("estado_busqueda", [
   "UNCHECKED",
 ]);
 
+// Tabla de extractos con clave como ID primario
 export const extractos = createTable(
   "extractos",
   (d) => ({
-    clave: d.varchar({ length: 50 }).primaryKey(),
-    juzgadoId: integer("juzgado_id")
-      .notNull()
-      .references(() => juzgados.id, { onDelete: "cascade" }),
+    clave: d.varchar({ length: 50 }).primaryKey(), // Clave como ID primario
     nombre_extracto: d.varchar({ length: 120 }).notNull(),
     descripcion: d.text(),
+    key_search: varchar("key_search", { length: 100 }), // Ej: "forean"
   }),
-  (t) => [
-    index("extractos_clave_idx").on(t.clave),
-    index("extractos_juzgado_idx").on(t.juzgadoId),
-  ],
+  (t) => [index("extractos_clave_idx").on(t.clave)],
 );
 
-// Tablas
+// Tabla de juzgados con ID compuesto
 export const juzgados = createTable(
   "juzgados",
   {
-    id: serial("id").primaryKey(),
-    clave_juzgado: varchar("clave_juzgado", { length: 50 }).notNull().unique(),
-    nombre_juzgado: varchar("nombre_juzgado", { length: 255 }).notNull(),
-    direccion: text("direccion"),
+    id: varchar("id", { length: 50 }).primaryKey(), // ID compuesto como string (e.j. "LABORAL-L04")
+    clave_juzgado: varchar("clave_juzgado", { length: 50 }).notNull(), // Ej: "L04"
+    nombre_juzgado: varchar("nombre_juzgado", { length: 255 }).notNull(), // Ej: "JUZGADO SEGUNDO LABORAL DE LA PRIMERA REGION"
+    tipo_juez: varchar("tipo_juez", { length: 100 }).notNull(), // Ej: "LABORAL"
+    extractoClave: varchar("extracto_clave", { length: 50 })
+      .notNull()
+      .references(() => extractos.clave, { onDelete: "cascade" }),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -79,7 +79,11 @@ export const juzgados = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("juzgados_clave_idx").on(t.clave_juzgado)],
+  (t) => [
+    index("juzgados_clave_idx").on(t.clave_juzgado),
+    index("juzgados_tipo_juez_idx").on(t.tipo_juez),
+    index("juzgados_extracto_idx").on(t.extractoClave),
+  ],
 );
 
 export const usuarios = createTable(
@@ -107,7 +111,6 @@ export const usuarioAttributes = createTable(
     nombre_usuario: varchar("nombre_usuario", { length: 255 }),
     apellido: varchar("apellido", { length: 255 }),
     phoneNumber: varchar("phone_number", { length: 15 }),
-
     preferencias: json("preferencias"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
@@ -124,8 +127,8 @@ export const expedientes = createTable(
   {
     id: serial("id").primaryKey(),
     exp: integer("exp").notNull(),
-    fecha: date("fecha").notNull(),
-    juzgadoId: integer("juzgado_id")
+    año: date("fecha").notNull(),
+    juzgadoId: varchar("juzgado_id", { length: 50 })
       .notNull()
       .references(() => juzgados.id, { onDelete: "cascade" }),
     acuerdosNuevos: text("acuerdos_nuevos").default(""),
@@ -141,7 +144,7 @@ export const expedientes = createTable(
   },
   (t) => [
     index("expedientes_juzgado_idx").on(t.juzgadoId),
-    index("expedientes_fecha_idx").on(t.fecha),
+    index("expedientes_año_idx").on(t.año),
     uniqueIndex("expedientes_exp_juzgado_unq").on(t.exp, t.juzgadoId),
   ],
 );
@@ -210,17 +213,17 @@ export const usuarioAttributesRelations = relations(
 );
 
 // Relaciones para juzgados
-export const juzgadosRelations = relations(juzgados, ({ many }) => ({
-  extractos: many(extractos),
+export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
+  extracto: one(extractos, {
+    fields: [juzgados.extractoClave],
+    references: [extractos.clave],
+  }),
   expedientes: many(expedientes),
 }));
 
 // Relaciones para extractos
-export const extractosRelations = relations(extractos, ({ one }) => ({
-  juzgado: one(juzgados, {
-    fields: [extractos.juzgadoId],
-    references: [juzgados.id],
-  }),
+export const extractosRelations = relations(extractos, ({ many }) => ({
+  juzgados: many(juzgados),
 }));
 
 // Relaciones para expedientes
@@ -262,11 +265,13 @@ export const vistaExtractosConJuzgado = pgView(
     .select({
       extractoClave: extractos.clave,
       extractoNombre: extractos.nombre_extracto,
+      juzgadoId: juzgados.id,
       juzgadoNombre: juzgados.nombre_juzgado,
       juzgadoClave: juzgados.clave_juzgado,
+      tipoJuez: juzgados.tipo_juez,
     })
     .from(extractos)
-    .innerJoin(juzgados, eq(extractos.juzgadoId, juzgados.id)),
+    .innerJoin(juzgados, eq(juzgados.extractoClave, extractos.clave)),
 );
 
 export const vistaResumenExpedientesPorJuzgado = pgView(
@@ -276,9 +281,10 @@ export const vistaResumenExpedientesPorJuzgado = pgView(
     .select({
       juzgadoId: juzgados.id,
       juzgadoNombre: juzgados.nombre_juzgado,
+      tipoJuez: juzgados.tipo_juez,
       totalExpedientes: sql`COUNT(${expedientes.id})`.as("total_expedientes"),
     })
     .from(juzgados)
     .innerJoin(expedientes, eq(juzgados.id, expedientes.juzgadoId))
-    .groupBy(juzgados.id, juzgados.nombre_juzgado),
+    .groupBy(juzgados.id, juzgados.nombre_juzgado, juzgados.tipo_juez),
 );

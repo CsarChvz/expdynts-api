@@ -29,6 +29,11 @@ export class ExpsConsumer extends WorkerHost {
     );
   }
 
+  // @OnWorkerEvent("drained")
+  // onQueueDrained() {
+  //   console.log("La cola exp está vacía, todas las tareas han sido procesadas");
+  //   // Implementa aquí tu lógica de trigger
+  // }
   @OnWorkerEvent("active")
   onActive(job: Job<any>) {
     this.logger.debug(`Procesando exp #${job.id} - ${job.data.id}`);
