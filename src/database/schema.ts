@@ -1,8 +1,7 @@
-/* eslint-disable no-empty-pattern */
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 // schema.ts
-import { eq, sql, relations } from "drizzle-orm";
+import {  sql, relations } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -11,11 +10,9 @@ import {
   text,
   timestamp,
   integer,
-  date,
   json,
   pgEnum,
   uniqueIndex,
-  pgView,
 } from "drizzle-orm/pg-core";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -36,7 +33,7 @@ export const posts = createTable(
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("name_idx").on(t.name)],
+  (t) => [index("name_idx").on(t.name)]
 );
 
 // Enums
@@ -49,41 +46,33 @@ export const estadoBusqueda = pgEnum("estado_busqueda", [
   "UNCHECKED",
 ]);
 
-// Tabla de extractos con clave como ID primario
-export const extractos = createTable(
-  "extractos",
-  (d) => ({
-    clave: d.varchar({ length: 50 }).primaryKey(), // Clave como ID primario
-    nombre_extracto: d.varchar({ length: 120 }).notNull(),
-    descripcion: d.text(),
-    key_search: varchar("key_search", { length: 100 }), // Ej: "forean"
-  }),
-  (t) => [index("extractos_clave_idx").on(t.clave)],
-);
+export const extractoEnum = pgEnum("extracto", [
+  "ZM",
+  "FRNS",
+  "PENALT",
+  "POPF",
+  "LABORAL",
+]);
 
-// Tabla de juzgados con ID compuesto
-export const juzgados = createTable(
-  "juzgados",
+
+export const expedientes = createTable(
+  "expedientes",
   {
-    id: varchar("id", { length: 50 }).primaryKey(), // ID compuesto como string (e.j. "LABORAL-L04")
-    clave_juzgado: varchar("clave_juzgado", { length: 50 }).notNull(), // Ej: "L04"
-    nombre_juzgado: varchar("nombre_juzgado", { length: 255 }).notNull(), // Ej: "JUZGADO SEGUNDO LABORAL DE LA PRIMERA REGION"
-    tipo_juez: varchar("tipo_juez", { length: 100 }).notNull(), // Ej: "LABORAL"
-    extractoClave: varchar("extracto_clave", { length: 50 })
-      .notNull()
-      .references(() => extractos.clave, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
+    id: serial("id").primaryKey(),
+    exp: integer("exp").notNull(),
+    fecha: integer("fecha").notNull(),
+    extracto: extractoEnum("extracto").notNull(),
+    cve_juz: varchar("cve_juz", { length: 255 }).notNull(),
+
+    acuerdosNuevos: text("acuerdos_nuevos").default(""),
+    acuerdosAnteriores: text("acuerdos_anteriores").default(""),
+    hashNuevo: varchar("hash_nuevo", { length: 255 }).default(""),
+    hashAnterior: varchar("hash_anterior", { length: 255 }).default(""),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
   },
-  (t) => [
-    index("juzgados_clave_idx").on(t.clave_juzgado),
-    index("juzgados_tipo_juez_idx").on(t.tipo_juez),
-    index("juzgados_extracto_idx").on(t.extractoClave),
-  ],
+  (t) => [index("expedientes_exp_idx").on(t.exp)]
 );
 
 export const usuarios = createTable(
@@ -99,7 +88,7 @@ export const usuarios = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("usuarios_email_idx").on(t.email)],
+  (t) => [index("usuarios_email_idx").on(t.email)]
 );
 
 export const usuarioAttributes = createTable(
@@ -111,6 +100,7 @@ export const usuarioAttributes = createTable(
     nombre_usuario: varchar("nombre_usuario", { length: 255 }),
     apellido: varchar("apellido", { length: 255 }),
     phoneNumber: varchar("phone_number", { length: 15 }),
+
     preferencias: json("preferencias"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
@@ -119,35 +109,9 @@ export const usuarioAttributes = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("usuario_attributes_phone_idx").on(t.phoneNumber)],
+  (t) => [index("usuario_attributes_phone_idx").on(t.phoneNumber)]
 );
 
-export const expedientes = createTable(
-  "expedientes",
-  {
-    id: serial("id").primaryKey(),
-    exp: integer("exp").notNull(),
-    año: date("fecha").notNull(),
-    juzgadoId: varchar("juzgado_id", { length: 50 })
-      .notNull()
-      .references(() => juzgados.id, { onDelete: "cascade" }),
-    acuerdosNuevos: text("acuerdos_nuevos").default(""),
-    acuerdosAnteriores: text("acuerdos_anteriores").default(""),
-    hashNuevo: varchar("hash_nuevo", { length: 255 }).default(""),
-    hashAnterior: varchar("hash_anterior", { length: 255 }).default(""),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (t) => [
-    index("expedientes_juzgado_idx").on(t.juzgadoId),
-    index("expedientes_año_idx").on(t.año),
-    uniqueIndex("expedientes_exp_juzgado_unq").on(t.exp, t.juzgadoId),
-  ],
-);
 
 export const usuarioExpedientes = createTable(
   "usuario_expedientes",
@@ -172,7 +136,7 @@ export const usuarioExpedientes = createTable(
     index("usuario_expedientes_status_idx")
       .on(t.status)
       .where(sql`status = 'ACTIVE'`),
-  ],
+  ]
 );
 
 export const busquedaCheck = createTable(
@@ -189,7 +153,7 @@ export const busquedaCheck = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("busqueda_check_ejecucion_idx").on(t.ultimaEjecucion)],
+  (t) => [index("busqueda_check_ejecucion_idx").on(t.ultimaEjecucion)]
 );
 
 // Relaciones para usuarios
@@ -209,31 +173,10 @@ export const usuarioAttributesRelations = relations(
       fields: [usuarioAttributes.usuarioId],
       references: [usuarios.id],
     }),
-  }),
+  })
 );
 
-// Relaciones para juzgados
-export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
-  extracto: one(extractos, {
-    fields: [juzgados.extractoClave],
-    references: [extractos.clave],
-  }),
-  expedientes: many(expedientes),
-}));
 
-// Relaciones para extractos
-export const extractosRelations = relations(extractos, ({ many }) => ({
-  juzgados: many(juzgados),
-}));
-
-// Relaciones para expedientes
-export const expedientesRelations = relations(expedientes, ({ one, many }) => ({
-  juzgado: one(juzgados, {
-    fields: [expedientes.juzgadoId],
-    references: [juzgados.id],
-  }),
-  usuarioExpedientes: many(usuarioExpedientes),
-}));
 
 // Relaciones para usuarioExpedientes
 export const usuarioExpedientesRelations = relations(
@@ -247,44 +190,12 @@ export const usuarioExpedientesRelations = relations(
       fields: [usuarioExpedientes.expedienteId],
       references: [expedientes.id],
     }),
-  }),
+  })
 );
 
 // Relaciones para busquedaCheck (si tiene relaciones)
 export const busquedaCheckRelations = relations(busquedaCheck, ({}) => ({}));
 
 // Tipos para las relaciones (opcional pero recomendado)
-export type Juzgado = typeof juzgados.$inferSelect;
 export type Usuario = typeof usuarios.$inferSelect;
 export type Expediente = typeof expedientes.$inferSelect;
-
-export const vistaExtractosConJuzgado = pgView(
-  "vista_extractos_con_juzgado",
-).as((qb) =>
-  qb
-    .select({
-      extractoClave: extractos.clave,
-      extractoNombre: extractos.nombre_extracto,
-      juzgadoId: juzgados.id,
-      juzgadoNombre: juzgados.nombre_juzgado,
-      juzgadoClave: juzgados.clave_juzgado,
-      tipoJuez: juzgados.tipo_juez,
-    })
-    .from(extractos)
-    .innerJoin(juzgados, eq(juzgados.extractoClave, extractos.clave)),
-);
-
-export const vistaResumenExpedientesPorJuzgado = pgView(
-  "vista_resumen_expedientes_por_juzgado",
-).as((qb) =>
-  qb
-    .select({
-      juzgadoId: juzgados.id,
-      juzgadoNombre: juzgados.nombre_juzgado,
-      tipoJuez: juzgados.tipo_juez,
-      totalExpedientes: sql`COUNT(${expedientes.id})`.as("total_expedientes"),
-    })
-    .from(juzgados)
-    .innerJoin(expedientes, eq(juzgados.id, expedientes.juzgadoId))
-    .groupBy(juzgados.id, juzgados.nombre_juzgado, juzgados.tipo_juez),
-);
