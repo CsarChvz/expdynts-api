@@ -18,40 +18,7 @@ export class QueueService {
     @InjectQueue(QUEUE_NAMES.EXPS) private expsQueue: Queue<ExpQueueItem>,
     @InjectQueue(QUEUE_NAMES.NOTIFICATIONS)
     private notificationsQueue: Queue<NotificationQueueItem>,
-  ) {
-    // this.queueEvents = new QueueEvents(this.expsQueue.name, {
-    //   connection: this.expsQueue.opts.connection,
-    // });
-    // this.queueEvents.on("drained", () => {
-    //   console.log("¡La cola está vacía! Todas las tareas han sido procesadas");
-    //   // Aquí puedes llamar a tu función o trigger
-    //   this.handleEmptyQueue();
-    // });
-  }
-
-  // private handleEmptyQueue() {
-  //   // Implementa aquí tu lógica cuando la cola queda vacía
-  //   console.log("Ejecutando acción después de procesar todos los trabajos");
-  // }
-
-  // private async handleEmptyQueue() {
-  //   // Verifica que realmente no haya trabajos activos ni pendientes
-  //   const [active, waiting] = await Promise.all([
-  //     this.expsQueue.getActiveCount(),
-  //     this.expsQueue.getWaitingCount(),
-  //   ]);
-
-  //   if (active === 0 && waiting === 0) {
-  //     console.log(
-  //       "Ejecutando acción después de procesar REALMENTE todos los trabajos",
-  //     );
-  //     // Aquí tu lógica cuando ya no hay nada procesándose
-  //   } else {
-  //     console.log(
-  //       `Falsa alarma: todavía hay ${active} trabajos activos y ${waiting} pendientes`,
-  //     );
-  //   }
-  // }
+  ) {}
 
   /**
    * Agrega un nuevo elemento a la cola de exps
