@@ -1,7 +1,8 @@
+/* eslint-disable no-empty-pattern */
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 // schema.ts
-import {  sql, relations } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -33,7 +34,7 @@ export const posts = createTable(
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("name_idx").on(t.name)]
+  (t) => [index("name_idx").on(t.name)],
 );
 
 // Enums
@@ -54,7 +55,6 @@ export const extractoEnum = pgEnum("extracto", [
   "LABORAL",
 ]);
 
-
 export const expedientes = createTable(
   "expedientes",
   {
@@ -70,9 +70,12 @@ export const expedientes = createTable(
     hashAnterior: varchar("hash_anterior", { length: 255 }).default(""),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
-  (t) => [index("expedientes_exp_idx").on(t.exp)]
+  (t) => [index("expedientes_exp_idx").on(t.exp)],
 );
 
 export const usuarios = createTable(
@@ -88,7 +91,7 @@ export const usuarios = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("usuarios_email_idx").on(t.email)]
+  (t) => [index("usuarios_email_idx").on(t.email)],
 );
 
 export const usuarioAttributes = createTable(
@@ -109,9 +112,8 @@ export const usuarioAttributes = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("usuario_attributes_phone_idx").on(t.phoneNumber)]
+  (t) => [index("usuario_attributes_phone_idx").on(t.phoneNumber)],
 );
-
 
 export const usuarioExpedientes = createTable(
   "usuario_expedientes",
@@ -136,7 +138,7 @@ export const usuarioExpedientes = createTable(
     index("usuario_expedientes_status_idx")
       .on(t.status)
       .where(sql`status = 'ACTIVE'`),
-  ]
+  ],
 );
 
 export const busquedaCheck = createTable(
@@ -153,7 +155,7 @@ export const busquedaCheck = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("busqueda_check_ejecucion_idx").on(t.ultimaEjecucion)]
+  (t) => [index("busqueda_check_ejecucion_idx").on(t.ultimaEjecucion)],
 );
 
 // Relaciones para usuarios
@@ -173,10 +175,8 @@ export const usuarioAttributesRelations = relations(
       fields: [usuarioAttributes.usuarioId],
       references: [usuarios.id],
     }),
-  })
+  }),
 );
-
-
 
 // Relaciones para usuarioExpedientes
 export const usuarioExpedientesRelations = relations(
@@ -190,7 +190,7 @@ export const usuarioExpedientesRelations = relations(
       fields: [usuarioExpedientes.expedienteId],
       references: [expedientes.id],
     }),
-  })
+  }),
 );
 
 // Relaciones para busquedaCheck (si tiene relaciones)
@@ -199,3 +199,7 @@ export const busquedaCheckRelations = relations(busquedaCheck, ({}) => ({}));
 // Tipos para las relaciones (opcional pero recomendado)
 export type Usuario = typeof usuarios.$inferSelect;
 export type Expediente = typeof expedientes.$inferSelect;
+export type UsuarioExpedientes = typeof usuarioExpedientes.$inferSelect;
+export type UsuarioExpedienteConExpediente = UsuarioExpedientes & {
+  expediente: Expediente;
+};
