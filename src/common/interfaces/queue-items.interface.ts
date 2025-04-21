@@ -1,5 +1,5 @@
 export interface ExpQueueItem {
-  id: string;
+  id: number;
   data: any;
   processedAt?: Date;
   status: "pending" | "processing" | "completed" | "failed";
@@ -8,7 +8,7 @@ export interface ExpQueueItem {
 }
 
 export interface ExpJobResult {
-  id: string;
+  id: number;
   processed: boolean;
   processingTime: number;
   result: string;
@@ -16,7 +16,7 @@ export interface ExpJobResult {
 
 // Interfaz para los elementos de la cola 'notifications'
 export interface NotificationQueueItem {
-  id: string;
+  id: number;
   expId: string;
   type: "email" | "sms" | "push";
   recipient: string;
@@ -26,7 +26,7 @@ export interface NotificationQueueItem {
 }
 
 export interface NotificationJobResult {
-  id: string;
+  id: number;
   recipient: string;
   type: string;
   sent: boolean;

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { QueueService } from "../queue/queue.service";
-import { DataService } from "../data/data.service";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { v4 as uuidv4 } from "uuid";
+import { DATABASE_CONNECTION } from "src/database/database-connection";
+import { NeonHttpDatabase } from "drizzle-orm/neon-http";
+import * as schema from "../../database/schema";
 @Injectable()
 export class CronService {
   private readonly logger = new Logger(CronService.name);
@@ -13,7 +13,8 @@ export class CronService {
 
   constructor(
     private readonly queueService: QueueService,
-    private readonly dataService: DataService,
+    @Inject(DATABASE_CONNECTION)
+    private readonly database: NeonHttpDatabase<typeof schema>,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
@@ -27,15 +28,21 @@ export class CronService {
       this.logger.log(
         "Ejecutando tarea programada: Obtener datos y agregarlos a la cola",
       );
+      const itemsExpedientes =
+        await this.database.query.usuarioExpedientes.findMany({
+          with: {
+            expediente: true,
+          },
+        });
 
-      // Obtenemos datos desde el servicio de datos
-      const items = await this.dataService.fetchPendingItems();
-      this.logger.log(`Obtenidos ${items.length} elementos para procesar`);
+      this.logger.log(
+        `Obtenidos ${itemsExpedientes.length} elementos para procesar`,
+      );
 
       // Para cada elemento, lo agregamos a la cola exps
-      const addPromises = items.map((item) =>
+      const addPromises = itemsExpedientes.map((item) =>
         this.queueService.addToExpsQueue({
-          id: item.id || uuidv4(),
+          id: item.id,
           data: item,
           status: "pending",
         }),
@@ -43,7 +50,7 @@ export class CronService {
 
       await Promise.all(addPromises);
       this.logger.log(
-        `${items.length} elementos agregados a la cola exitosamente`,
+        `${itemsExpedientes.length} elementos agregados a la cola exitosamente`,
       );
 
       // Obtenemos métricas actuales de las colas

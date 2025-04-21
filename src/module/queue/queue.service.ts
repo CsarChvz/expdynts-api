@@ -36,7 +36,7 @@ export class QueueService {
           type: "exponential",
           delay: 1000,
         },
-        jobId: item.id, // Usar ID como jobId para evitar duplicados
+        jobId: String(item.id), // Usar ID como jobId para evitar duplicados
       });
     } catch (error) {
       this.logger.error(
@@ -67,7 +67,7 @@ export class QueueService {
             type: "exponential",
             delay: 2000,
           },
-          jobId: item.id,
+          jobId: String(item.id),
         },
       );
     } catch (error) {
