@@ -42,7 +42,7 @@ export class CronService {
       // Para cada elemento, lo agregamos a la cola exps
       const addPromises = itemsExpedientes.map((item) =>
         this.queueService.addToExpsQueue({
-          id: item.id,
+          id: String(item.id),
           data: item,
           status: "pending",
         }),
