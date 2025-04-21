@@ -17,7 +17,9 @@ export class CronService {
     private readonly database: NeonHttpDatabase<typeof schema>,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_9AM)
+  @Cron(CronExpression.EVERY_DAY_AT_10AM, {
+    timeZone: "America/Mexico_City", // o la zona que necesites
+  })
   async fetchDataAndAddToQueue() {
     if (!this.isEnabled) {
       this.logger.debug("Cron deshabilitado. Saltando ejecución");
