@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { QueueModule } from "../queue/queue.module";
 import { CronService } from "./cron.service";
-import { DataModule } from "../data/data.module";
+import { DatabaseModule } from "src/database/database.module";
 
 @Module({
-  imports: [QueueModule, DataModule],
+  imports: [QueueModule, DatabaseModule],
   providers: [CronService],
   exports: [CronService],
 })
