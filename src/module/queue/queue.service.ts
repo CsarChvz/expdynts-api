@@ -127,28 +127,21 @@ export class QueueService {
     };
   }
 
-  async checkProxy() {
+  async fetchExpediente(url: string) {
     const login = "a698053eb4a3eeaabac6";
     const password = "9ce98dafba032b0f";
+    const host = "gw.dataimpulse.com";
+    const port = "823";
 
     const httpsAgent = new HttpsProxyAgent(
-      `http://${login}:${password}@gw.dataimpulse.com:823/`,
+      `http://${login}:${password}@${host}:${port}/`,
     );
 
-    // const login = "brd.superproxy.io";
-    // const password = "rcauvdgwqk5y";
-
-    // const httpsAgent = new HttpsProxyAgent(
-    //   "http://brd-customer-hl_6e97d2e6-zone-datacenter_proxy1:9lhja4a0qr1e@brd.superproxy.io:33335/",
-    // );
-
     const result = await lastValueFrom(
-      this.httpService.get("https://geo.brdtest.com/mygeo.json", {
+      this.httpService.get(url, {
         httpsAgent,
       }),
     );
-
-    console.log(result.data); // Para ver el contenido de la respuesta
     return result.data;
   }
 }

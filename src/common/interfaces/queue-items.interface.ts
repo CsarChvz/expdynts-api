@@ -1,17 +1,12 @@
+import type { UsuarioExpedienteConExpediente } from "../../database/schema";
+
 export interface ExpQueueItem {
   id: string;
-  data: any;
+  data: UsuarioExpedienteConExpediente;
   processedAt?: Date;
   status: "pending" | "processing" | "completed" | "failed";
   retries?: number;
   shouldNotify?: boolean;
-}
-
-export interface ExpJobResult {
-  id: string;
-  processed: boolean;
-  processingTime: number;
-  result: string;
 }
 
 // Interfaz para los elementos de la cola 'notifications'
