@@ -1,1 +1,0 @@
-ALTER TABLE "expdynts_expedientes" ADD COLUMN "acuerdos_json" json NOT NULL;

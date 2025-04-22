@@ -6,7 +6,6 @@ import { sql, relations } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
-  serial,
   varchar,
   text,
   timestamp,
@@ -58,7 +57,7 @@ export const extractoEnum = pgEnum("extracto", [
 export const expedientes = createTable(
   "expedientes",
   {
-    id: serial("id").primaryKey(),
+    expedienteId: integer().primaryKey().generatedByDefaultAsIdentity(),
     exp: integer("exp").notNull(),
     fecha: integer("fecha").notNull(),
     extracto: extractoEnum("extracto").notNull(),
@@ -76,10 +75,10 @@ export const expedientes = createTable(
 export const acuerdosHistorial = createTable(
   "acuerdos_historial",
   {
-    id: serial("id").primaryKey(),
+    acuerdosHistorialId: integer().primaryKey().generatedByDefaultAsIdentity(),
     expedienteId: integer("expediente_id")
       .notNull()
-      .references(() => expedientes.id, { onDelete: "cascade" }),
+      .references(() => expedientes.expedienteId, { onDelete: "cascade" }),
     acuerdos: json("acuerdos").notNull(),
     hash: varchar("hash", { length: 255 }).notNull(),
     createdAt: timestamp("created_at")
@@ -95,7 +94,7 @@ export const acuerdosHistorial = createTable(
 export const usuarios = createTable(
   "usuarios",
   {
-    id: serial("id").primaryKey(),
+    usuarioId: integer().primaryKey().generatedByDefaultAsIdentity(),
     externalId: varchar("external_id", { length: 255 }).unique(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     createdAt: timestamp("created_at")
@@ -111,9 +110,9 @@ export const usuarios = createTable(
 export const usuarioAttributes = createTable(
   "usuario_attributes",
   {
-    usuarioId: integer("usuario_id")
+    usuarioAttributeId: integer("usuario_id")
       .primaryKey()
-      .references(() => usuarios.id, { onDelete: "cascade" }),
+      .references(() => usuarios.usuarioId, { onDelete: "cascade" }),
     nombre_usuario: varchar("nombre_usuario", { length: 255 }),
     apellido: varchar("apellido", { length: 255 }),
     phoneNumber: varchar("phone_number", { length: 15 }),
@@ -132,13 +131,13 @@ export const usuarioAttributes = createTable(
 export const usuarioExpedientes = createTable(
   "usuario_expedientes",
   {
-    id: serial("id").primaryKey(),
+    usuarioExpedientesId: integer().primaryKey().generatedByDefaultAsIdentity(),
     usuarioId: integer("usuario_id")
       .notNull()
-      .references(() => usuarios.id, { onDelete: "cascade" }),
+      .references(() => usuarios.usuarioId, { onDelete: "cascade" }),
     expedienteId: integer("expediente_id")
       .notNull()
-      .references(() => expedientes.id, { onDelete: "cascade" }),
+      .references(() => expedientes.expedienteId, { onDelete: "cascade" }),
     status: estadoExpediente("status").default("ACTIVE").notNull(),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
@@ -158,7 +157,7 @@ export const usuarioExpedientes = createTable(
 export const busquedaCheck = createTable(
   "busqueda_check",
   {
-    id: serial("id").primaryKey(),
+    busquedaCheckId: integer().primaryKey().generatedByDefaultAsIdentity(),
     status: estadoBusqueda("status").default("CHECKED").notNull(),
     descripcion: text("descripcion"),
     ultimaEjecucion: timestamp("ultima_ejecucion"),
@@ -175,8 +174,8 @@ export const busquedaCheck = createTable(
 // Relaciones para usuarios
 export const usuariosRelations = relations(usuarios, ({ one, many }) => ({
   attributes: one(usuarioAttributes, {
-    fields: [usuarios.id],
-    references: [usuarioAttributes.usuarioId],
+    fields: [usuarios.usuarioId],
+    references: [usuarioAttributes.usuarioAttributeId],
   }),
   expedientes: many(usuarioExpedientes),
 }));
@@ -186,8 +185,8 @@ export const usuarioAttributesRelations = relations(
   usuarioAttributes,
   ({ one }) => ({
     usuario: one(usuarios, {
-      fields: [usuarioAttributes.usuarioId],
-      references: [usuarios.id],
+      fields: [usuarioAttributes.usuarioAttributeId],
+      references: [usuarios.usuarioId],
     }),
   }),
 );
@@ -198,11 +197,11 @@ export const usuarioExpedientesRelations = relations(
   ({ one }) => ({
     usuario: one(usuarios, {
       fields: [usuarioExpedientes.usuarioId],
-      references: [usuarios.id],
+      references: [usuarios.usuarioId],
     }),
     expediente: one(expedientes, {
       fields: [usuarioExpedientes.expedienteId],
-      references: [expedientes.id],
+      references: [expedientes.expedienteId],
     }),
   }),
 );
@@ -218,7 +217,7 @@ export const acuerdosHistorialRelations = relations(
   ({ one }) => ({
     expediente: one(expedientes, {
       fields: [acuerdosHistorial.expedienteId],
-      references: [expedientes.id],
+      references: [expedientes.expedienteId],
     }),
   }),
 );
