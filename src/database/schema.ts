@@ -63,12 +63,6 @@ export const expedientes = createTable(
     fecha: integer("fecha").notNull(),
     extracto: extractoEnum("extracto").notNull(),
     cve_juz: varchar("cve_juz", { length: 255 }).notNull(),
-
-    acuerdosNuevos: text("acuerdos_nuevos").default(""),
-    acuerdosAnteriores: text("acuerdos_anteriores").default(""),
-    hashNuevo: varchar("hash_nuevo", { length: 255 }).default(""),
-    hashAnterior: varchar("hash_anterior", { length: 255 }).default(""),
-
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -76,6 +70,25 @@ export const expedientes = createTable(
       .notNull(),
   },
   (t) => [index("expedientes_exp_idx").on(t.exp)],
+);
+
+export const acuerdosHistorial = createTable(
+  "acuerdos_historial",
+  {
+    id: serial("id").primaryKey(),
+    expedienteId: integer("expediente_id")
+      .notNull()
+      .references(() => expedientes.id, { onDelete: "cascade" }),
+    acuerdos: json("acuerdos").notNull(),
+    hash: varchar("hash", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => [
+    index("acuerdos_historial_expediente_idx").on(t.expedienteId),
+    index("acuerdos_historial_created_idx").on(t.createdAt),
+  ],
 );
 
 export const usuarios = createTable(
@@ -188,6 +201,22 @@ export const usuarioExpedientesRelations = relations(
     }),
     expediente: one(expedientes, {
       fields: [usuarioExpedientes.expedienteId],
+      references: [expedientes.id],
+    }),
+  }),
+);
+// Relaciones para expedientes
+export const expedientesRelations = relations(expedientes, ({ many }) => ({
+  historialAcuerdos: many(acuerdosHistorial),
+  usuarioExpedientes: many(usuarioExpedientes),
+}));
+
+// Relación para acuerdosHistorial
+export const acuerdosHistorialRelations = relations(
+  acuerdosHistorial,
+  ({ one }) => ({
+    expediente: one(expedientes, {
+      fields: [acuerdosHistorial.expedienteId],
       references: [expedientes.id],
     }),
   }),

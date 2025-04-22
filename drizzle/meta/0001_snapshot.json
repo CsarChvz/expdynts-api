@@ -1,9 +1,98 @@
 {
-  "id": "0ce5d096-d875-4ffe-9396-91b08346a7bf",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "22d0b5c3-3f61-405e-af0d-c2d1eedda435",
+  "prevId": "0ce5d096-d875-4ffe-9396-91b08346a7bf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.expdynts_acuerdos_historial": {
+      "name": "expdynts_acuerdos_historial",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expediente_id": {
+          "name": "expediente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos": {
+          "name": "acuerdos",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash": {
+          "name": "hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "acuerdos_historial_expediente_idx": {
+          "name": "acuerdos_historial_expediente_idx",
+          "columns": [
+            {
+              "expression": "expediente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "acuerdos_historial_created_idx": {
+          "name": "acuerdos_historial_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expdynts_acuerdos_historial_expediente_id_expdynts_expedientes_id_fk": {
+          "name": "expdynts_acuerdos_historial_expediente_id_expdynts_expedientes_id_fk",
+          "tableFrom": "expdynts_acuerdos_historial",
+          "tableTo": "expdynts_expedientes",
+          "columnsFrom": [
+            "expediente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.expdynts_busqueda_check": {
       "name": "expdynts_busqueda_check",
       "schema": "",
@@ -106,34 +195,6 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
-        },
-        "acuerdos_nuevos": {
-          "name": "acuerdos_nuevos",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "acuerdos_anteriores": {
-          "name": "acuerdos_anteriores",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "hash_nuevo": {
-          "name": "hash_nuevo",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "hash_anterior": {
-          "name": "hash_anterior",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
         },
         "created_at": {
           "name": "created_at",
