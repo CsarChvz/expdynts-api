@@ -1,0 +1,954 @@
+{
+  "id": "71e43b56-d7f8-4bc3-9f14-a616f5c417c3",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.expdynts_acuerdos_historial": {
+      "name": "expdynts_acuerdos_historial",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_acuerdos_historial_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "expediente_id": {
+          "name": "expediente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos": {
+          "name": "acuerdos",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash": {
+          "name": "hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "acuerdos_historial_expediente_idx": {
+          "name": "acuerdos_historial_expediente_idx",
+          "columns": [
+            {
+              "expression": "expediente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "acuerdos_historial_created_idx": {
+          "name": "acuerdos_historial_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expdynts_acuerdos_historial_expediente_id_expdynts_expedientes_id_fk": {
+          "name": "expdynts_acuerdos_historial_expediente_id_expdynts_expedientes_id_fk",
+          "tableFrom": "expdynts_acuerdos_historial",
+          "tableTo": "expdynts_expedientes",
+          "columnsFrom": [
+            "expediente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_busqueda_check": {
+      "name": "expdynts_busqueda_check",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_busqueda_check_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "status": {
+          "name": "status",
+          "type": "estado_busqueda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'CHECKED'"
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultima_ejecucion": {
+          "name": "ultima_ejecucion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "busqueda_check_ejecucion_idx": {
+          "name": "busqueda_check_ejecucion_idx",
+          "columns": [
+            {
+              "expression": "ultima_ejecucion",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_expedientes": {
+      "name": "expdynts_expedientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_expedientes_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "exp": {
+          "name": "exp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extracto": {
+          "name": "extracto",
+          "type": "extracto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cve_juz": {
+          "name": "cve_juz",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos_json": {
+          "name": "acuerdos_json",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "expedientes_exp_idx": {
+          "name": "expedientes_exp_idx",
+          "columns": [
+            {
+              "expression": "exp",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_post": {
+      "name": "expdynts_post",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_post_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_usuario_attributes": {
+      "name": "expdynts_usuario_attributes",
+      "schema": "",
+      "columns": {
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre_usuario": {
+          "name": "nombre_usuario",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apellido": {
+          "name": "apellido",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preferencias": {
+          "name": "preferencias",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "usuario_attributes_phone_idx": {
+          "name": "usuario_attributes_phone_idx",
+          "columns": [
+            {
+              "expression": "phone_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expdynts_usuario_attributes_usuario_id_expdynts_usuarios_id_fk": {
+          "name": "expdynts_usuario_attributes_usuario_id_expdynts_usuarios_id_fk",
+          "tableFrom": "expdynts_usuario_attributes",
+          "tableTo": "expdynts_usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_usuario_expedientes": {
+      "name": "expdynts_usuario_expedientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_usuario_expedientes_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expediente_id": {
+          "name": "expediente_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "estado_expediente",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "usuario_expediente_unq": {
+          "name": "usuario_expediente_unq",
+          "columns": [
+            {
+              "expression": "usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expediente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "usuario_expedientes_status_idx": {
+          "name": "usuario_expedientes_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "status = 'ACTIVE'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expdynts_usuario_expedientes_usuario_id_expdynts_usuarios_id_fk": {
+          "name": "expdynts_usuario_expedientes_usuario_id_expdynts_usuarios_id_fk",
+          "tableFrom": "expdynts_usuario_expedientes",
+          "tableTo": "expdynts_usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expdynts_usuario_expedientes_expediente_id_expdynts_expedientes_id_fk": {
+          "name": "expdynts_usuario_expedientes_expediente_id_expdynts_expedientes_id_fk",
+          "tableFrom": "expdynts_usuario_expedientes",
+          "tableTo": "expdynts_expedientes",
+          "columnsFrom": [
+            "expediente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.expdynts_usuarios": {
+      "name": "expdynts_usuarios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "expdynts_usuarios_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "usuarios_email_idx": {
+          "name": "usuarios_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "expdynts_usuarios_external_id_unique": {
+          "name": "expdynts_usuarios_external_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "external_id"
+          ]
+        },
+        "expdynts_usuarios_email_unique": {
+          "name": "expdynts_usuarios_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_busqueda": {
+      "name": "estado_busqueda",
+      "schema": "public",
+      "values": [
+        "CHECKED",
+        "UNCHECKED"
+      ]
+    },
+    "public.estado_expediente": {
+      "name": "estado_expediente",
+      "schema": "public",
+      "values": [
+        "ACTIVE",
+        "ARCHIVED"
+      ]
+    },
+    "public.extracto": {
+      "name": "extracto",
+      "schema": "public",
+      "values": [
+        "ZM",
+        "FRNS",
+        "PENALT",
+        "POPF",
+        "LABORAL"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.vista_expedientes_usuario": {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "vista_expedientes_usuario_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre_usuario": {
+          "name": "nombre_usuario",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apellido": {
+          "name": "apellido",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exp": {
+          "name": "exp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extracto": {
+          "name": "extracto",
+          "type": "extracto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cve_juz": {
+          "name": "cve_juz",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos_json": {
+          "name": "acuerdos_json",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "estado_expediente",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "definition": "select \"expdynts_usuarios\".\"id\", \"expdynts_usuarios\".\"email\", \"expdynts_usuario_attributes\".\"nombre_usuario\", \"expdynts_usuario_attributes\".\"apellido\", \"expdynts_expedientes\".\"id\", \"expdynts_expedientes\".\"exp\", \"expdynts_expedientes\".\"fecha\", \"expdynts_expedientes\".\"extracto\", \"expdynts_expedientes\".\"cve_juz\", \"expdynts_expedientes\".\"acuerdos_json\", \"expdynts_usuario_expedientes\".\"status\", \"expdynts_usuario_expedientes\".\"created_at\" from \"expdynts_usuarios\" inner join \"expdynts_usuario_attributes\" on \"expdynts_usuarios\".\"id\" = \"expdynts_usuario_attributes\".\"usuario_id\" inner join \"expdynts_usuario_expedientes\" on \"expdynts_usuarios\".\"id\" = \"expdynts_usuario_expedientes\".\"usuario_id\" inner join \"expdynts_expedientes\" on \"expdynts_usuario_expedientes\".\"expediente_id\" = \"expdynts_expedientes\".\"id\"",
+      "name": "vista_expedientes_usuario",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    },
+    "public.vista_historial_acuerdos": {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "vista_historial_acuerdos_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "exp": {
+          "name": "exp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extracto": {
+          "name": "extracto",
+          "type": "extracto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cve_juz": {
+          "name": "cve_juz",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos": {
+          "name": "acuerdos",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash": {
+          "name": "hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "definition": "select \"expdynts_acuerdos_historial\".\"id\", \"expdynts_expedientes\".\"id\", \"expdynts_expedientes\".\"exp\", \"expdynts_expedientes\".\"extracto\", \"expdynts_expedientes\".\"cve_juz\", \"expdynts_acuerdos_historial\".\"acuerdos\", \"expdynts_acuerdos_historial\".\"hash\", \"expdynts_acuerdos_historial\".\"created_at\" from \"expdynts_acuerdos_historial\" inner join \"expdynts_expedientes\" on \"expdynts_acuerdos_historial\".\"expediente_id\" = \"expdynts_expedientes\".\"id\" order by \"expdynts_expedientes\".\"id\" asc, \"expdynts_acuerdos_historial\".\"created_at\" desc",
+      "name": "vista_historial_acuerdos",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    },
+    "public.vista_ultimas_busquedas": {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "vista_ultimas_busquedas_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "status": {
+          "name": "status",
+          "type": "estado_busqueda",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'CHECKED'"
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultima_ejecucion": {
+          "name": "ultima_ejecucion",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "definition": "select \"expdynts_busqueda_check\".\"id\", \"expdynts_busqueda_check\".\"status\", \"expdynts_busqueda_check\".\"descripcion\", \"expdynts_busqueda_check\".\"ultima_ejecucion\", COUNT(\"expdynts_expedientes\".\"id\") as \"total_expedientes_encontrados\" from \"expdynts_busqueda_check\" left join \"expdynts_expedientes\" on \"expdynts_expedientes\".\"created_at\" > \"expdynts_busqueda_check\".\"ultima_ejecucion\" group by \"expdynts_busqueda_check\".\"id\", \"expdynts_busqueda_check\".\"status\", \"expdynts_busqueda_check\".\"descripcion\", \"expdynts_busqueda_check\".\"ultima_ejecucion\" order by \"expdynts_busqueda_check\".\"ultima_ejecucion\" desc",
+      "name": "vista_ultimas_busquedas",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    },
+    "public.vista_expedientes_ultimo_acuerdo": {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "vista_expedientes_ultimo_acuerdo_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "exp": {
+          "name": "exp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extracto": {
+          "name": "extracto",
+          "type": "extracto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cve_juz": {
+          "name": "cve_juz",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acuerdos_json": {
+          "name": "acuerdos_json",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "definition": "select \"expdynts_expedientes\".\"id\", \"expdynts_expedientes\".\"exp\", \"expdynts_expedientes\".\"fecha\", \"expdynts_expedientes\".\"extracto\", \"expdynts_expedientes\".\"cve_juz\", \"expdynts_expedientes\".\"acuerdos_json\", \"expdynts_expedientes\".\"created_at\", \"expdynts_expedientes\".\"updated_at\", \"ultimo_acuerdo\", \"fecha_ultimo_acuerdo\", \"hash_ultimo_acuerdo\", \"historial_id_ultimo_acuerdo\" from \"expdynts_expedientes\" left join (select \"expediente_id\", \n        json_agg(acuerdos ORDER BY created_at DESC LIMIT 1)\n       as \"ultimo_acuerdo\", \n        max(created_at)\n       as \"fecha_ultimo_acuerdo\", \n        (array_agg(hash ORDER BY created_at DESC LIMIT 1))[1]\n       as \"hash_ultimo_acuerdo\", \n        (array_agg(id ORDER BY created_at DESC LIMIT 1))[1]\n       as \"historial_id_ultimo_acuerdo\" from \"expdynts_acuerdos_historial\" group by \"expdynts_acuerdos_historial\".\"expediente_id\") \"latest_acuerdo\" on \"expdynts_expedientes\".\"id\" = \"latest_acuerdo\".\"expediente_id\" order by \"fecha_ultimo_acuerdo\" desc, \"expdynts_expedientes\".\"id\" desc",
+      "name": "vista_expedientes_ultimo_acuerdo",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    }
+  },
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
