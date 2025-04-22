@@ -63,6 +63,7 @@ export const expedientes = createTable(
     fecha: integer("fecha").notNull(),
     extracto: extractoEnum("extracto").notNull(),
     cve_juz: varchar("cve_juz", { length: 255 }).notNull(),
+    acuerdos_json: json("acuerdos_json").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
