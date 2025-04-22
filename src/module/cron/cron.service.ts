@@ -20,16 +20,13 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_10AM, {
     timeZone: "America/Mexico_City", // o la zona que necesites
   })
-  async fetchDataAndAddToQueue() {
-    if (!this.isEnabled) {
-      this.logger.debug("Cron deshabilitado. Saltando ejecución");
-      return;
-    }
-
+  async getExpsAndAddToQueue() {
     try {
       this.logger.log(
-        "Ejecutando tarea programada: Obtener datos y agregarlos a la cola",
+        "[GET_AND_QUEUE] - Obtener registros y agregarlos a la cola.",
       );
+
+      this.logger.log("[GET_EXPEDIENTES] - Se obtienen los expedientes");
       const itemsExpedientes =
         await this.database.query.usuarioExpedientes.findMany({
           with: {
@@ -41,21 +38,17 @@ export class CronService {
         `Obtenidos ${itemsExpedientes.length} elementos para procesar`,
       );
 
-      // Para cada elemento, lo agregamos a la cola exps
       const addPromises = itemsExpedientes.map((item) =>
         this.queueService.addToExpsQueue({
-          id: `exp-${item.id}`, // Convertido explícitamente a string con prefijo
+          id: `exp-${item.expedienteId}`,
           data: item,
           status: "pending",
         }),
       );
 
+      this.logger.log("[QUEUE] - Se ingregan en la cola de expedientes");
       await Promise.all(addPromises);
-      this.logger.log(
-        `${itemsExpedientes.length} elementos agregados a la cola exitosamente`,
-      );
 
-      // Obtenemos métricas actuales de las colas
       const queueMetrics = await this.queueService.getQueueMetrics();
       this.logger.debug(
         `Estado actual de las colas: ${JSON.stringify(queueMetrics)}`,
@@ -85,6 +78,6 @@ export class CronService {
    */
   async triggerManualExecution() {
     this.logger.log("Ejecución manual solicitada");
-    return this.fetchDataAndAddToQueue();
+    return this.getExpsAndAddToQueue();
   }
 }

@@ -31,7 +31,7 @@ export class ExpsConsumer extends WorkerHost {
 
   @OnWorkerEvent("active")
   onActive(job: Job<any>) {
-    this.logger.debug(`Procesando exp #${job.id} - ${job.data.id}`);
+    this.logger.debug(`Procesando expediebnte ${job.id} - ${job.data.id}`);
   }
 
   @OnWorkerEvent("completed")
