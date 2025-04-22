@@ -44,7 +44,7 @@ export class CronService {
       // Para cada elemento, lo agregamos a la cola exps
       const addPromises = itemsExpedientes.map((item) =>
         this.queueService.addToExpsQueue({
-          id: String(item.id),
+          id: `exp-${item.id}`, // Convertido explícitamente a string con prefijo
           data: item,
           status: "pending",
         }),
@@ -60,14 +60,17 @@ export class CronService {
       this.logger.debug(
         `Estado actual de las colas: ${JSON.stringify(queueMetrics)}`,
       );
+
+      return { success: true, processed: itemsExpedientes.length };
     } catch (error) {
       this.logger.error(
         `Error en la tarea programada: ${error.message}`,
         error.stack,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      return { success: false, error: error.message };
     }
   }
-
   /**
    * Habilita o deshabilita la ejecución de tareas programadas
    */

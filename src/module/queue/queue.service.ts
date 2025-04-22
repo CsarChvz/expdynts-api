@@ -138,36 +138,4 @@ export class QueueService {
     );
     return { id: job.id, name: job.name };
   }
-
-  async getExpsQueueStatus() {
-    const [waiting, active, completed, failed] = await Promise.all([
-      this.expsQueue.getWaitingCount(),
-      this.expsQueue.getActiveCount(),
-      this.expsQueue.getCompletedCount(),
-      this.expsQueue.getFailedCount(),
-    ]);
-
-    return {
-      waiting,
-      active,
-      completed,
-      failed,
-    };
-  }
-
-  async getNotificationsQueueStatus() {
-    const [waiting, active, completed, failed] = await Promise.all([
-      this.notificationsQueue.getWaitingCount(),
-      this.notificationsQueue.getActiveCount(),
-      this.notificationsQueue.getCompletedCount(),
-      this.notificationsQueue.getFailedCount(),
-    ]);
-
-    return {
-      waiting,
-      active,
-      completed,
-      failed,
-    };
-  }
 }
