@@ -77,17 +77,19 @@ export const acuerdosHistorial = createTable(
   "acuerdos_historial",
   {
     acuerdosHistorialId: integer().primaryKey().generatedByDefaultAsIdentity(),
-    expedienteId: integer("expediente_id")
+    usuarioExpedienteId: integer("usuario_expediente_id")
       .notNull()
-      .references(() => expedientes.expedienteId, { onDelete: "cascade" }),
+      .references(() => usuarioExpedientes.usuarioExpedientesId, {
+        onDelete: "cascade",
+      }),
     acuerdos: json("acuerdos").notNull(),
-    hash: varchar("hash", { length: 255 }).notNull(),
+    hash: json("hash").notNull(),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
   (t) => [
-    index("acuerdos_historial_expediente_idx").on(t.expedienteId),
+    index("acuerdos_historial_usuario_exp_idx").on(t.usuarioExpedienteId),
     index("acuerdos_historial_created_idx").on(t.createdAt),
   ],
 );
@@ -213,12 +215,13 @@ export const expedientesRelations = relations(expedientes, ({ many }) => ({
 }));
 
 // Relación para acuerdosHistorial
+// Relaciones para acuerdosHistorial
 export const acuerdosHistorialRelations = relations(
   acuerdosHistorial,
   ({ one }) => ({
-    expediente: one(expedientes, {
-      fields: [acuerdosHistorial.expedienteId],
-      references: [expedientes.expedienteId],
+    usuarioExpediente: one(usuarioExpedientes, {
+      fields: [acuerdosHistorial.usuarioExpedienteId],
+      references: [usuarioExpedientes.usuarioExpedientesId],
     }),
   }),
 );

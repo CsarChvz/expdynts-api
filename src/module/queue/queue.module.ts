@@ -8,6 +8,7 @@ import { NotificationsConsumer } from "./consumers/notificationts.consumer";
 import { BullShutdownService } from "./bull-shutdown/bull-shutdown.service";
 import { HttpModule } from "@nestjs/axios";
 import { HashModule } from "src/common/hash/hash.module";
+import { DatabaseModule } from "src/database/database.module";
 @Module({
   controllers: [QueueController],
   providers: [
@@ -45,6 +46,7 @@ import { HashModule } from "src/common/hash/hash.module";
         },
       },
     ),
+    DatabaseModule,
     HttpModule,
     HashModule,
   ],
