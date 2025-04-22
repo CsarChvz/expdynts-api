@@ -8,7 +8,7 @@ import {
   ExpQueueItem,
   NotificationQueueItem,
 } from "src/common/interfaces/queue-items.interface";
-
+import { v4 as uuid } from "uuid";
 @Injectable()
 export class QueueService {
   private readonly logger = new Logger(QueueService.name);
@@ -36,7 +36,7 @@ export class QueueService {
           type: "exponential",
           delay: 1000,
         },
-        jobId: String(item.id), // Usar ID como jobId para evitar duplicados
+        jobId: uuid(),
       });
     } catch (error) {
       this.logger.error(
@@ -123,7 +123,7 @@ export class QueueService {
 
   async addExperimentJob(data: any, opts?: any) {
     this.logger.log(`Adding experiment job with data: ${JSON.stringify(data)}`);
-    const job = await this.expsQueue.add("process-experiment", data, opts);
+    const job = await this.expsQueue.add(JOB_NAMES.PROCESS_EXP, data, opts);
     return { id: job.id, name: job.name };
   }
 
