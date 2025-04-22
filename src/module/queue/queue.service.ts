@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { HttpService } from "@nestjs/axios";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
 import { Queue, QueueEvents } from "bullmq";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { lastValueFrom } from "rxjs";
 import { JOB_NAMES, QUEUE_NAMES } from "src/common/constants/queue.constants";
 import {
   ExpQueueItem,
@@ -17,6 +21,7 @@ export class QueueService {
     @InjectQueue(QUEUE_NAMES.EXPS) private expsQueue: Queue<ExpQueueItem>,
     @InjectQueue(QUEUE_NAMES.NOTIFICATIONS)
     private notificationsQueue: Queue<NotificationQueueItem>,
+    private httpService: HttpService,
   ) {}
 
   /**
@@ -120,5 +125,30 @@ export class QueueService {
         completed: notificationsCompleted,
       },
     };
+  }
+
+  async checkProxy() {
+    const login = "a698053eb4a3eeaabac6";
+    const password = "9ce98dafba032b0f";
+
+    const httpsAgent = new HttpsProxyAgent(
+      `http://${login}:${password}@gw.dataimpulse.com:823/`,
+    );
+
+    // const login = "brd.superproxy.io";
+    // const password = "rcauvdgwqk5y";
+
+    // const httpsAgent = new HttpsProxyAgent(
+    //   "http://brd-customer-hl_6e97d2e6-zone-datacenter_proxy1:9lhja4a0qr1e@brd.superproxy.io:33335/",
+    // );
+
+    const result = await lastValueFrom(
+      this.httpService.get("https://geo.brdtest.com/mygeo.json", {
+        httpsAgent,
+      }),
+    );
+
+    console.log(result.data); // Para ver el contenido de la respuesta
+    return result.data;
   }
 }

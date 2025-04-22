@@ -6,6 +6,7 @@ import { QUEUE_NAMES } from "src/common/constants/queue.constants";
 import { ExpsConsumer } from "./consumers/exps.consumer";
 import { NotificationsConsumer } from "./consumers/notificationts.consumer";
 import { BullShutdownService } from "./bull-shutdown/bull-shutdown.service";
+import { HttpModule } from "@nestjs/axios";
 @Module({
   controllers: [QueueController],
   providers: [
@@ -43,6 +44,7 @@ import { BullShutdownService } from "./bull-shutdown/bull-shutdown.service";
         },
       },
     ),
+    HttpModule,
   ],
 })
 export class QueueModule {}
