@@ -9,6 +9,6 @@ export class CronController {
 
   @Post("bulk")
   async bulkNotifis() {
-    return this.cronService.fetchDataAndAddToQueue();
+    return await this.cronService.getExpsAndAddToQueue();
   }
 }

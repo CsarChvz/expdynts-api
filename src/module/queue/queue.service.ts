@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
@@ -29,7 +28,7 @@ export class QueueService {
       this.logger.log(`Agregando item a la cola exps: ${item.id}`);
 
       // En BullMQ, debemos especificar un nombre para el job
-      return await this.expsQueue.add(JOB_NAMES.PROCESS_EXP, item, {
+      const job = await this.expsQueue.add(JOB_NAMES.PROCESS_EXP, item, {
         priority: 1, // Mayor prioridad
         attempts: 3,
         backoff: {
@@ -38,6 +37,8 @@ export class QueueService {
         },
         jobId: uuid(),
       });
+
+      return job;
     } catch (error) {
       this.logger.error(
         `Error al agregar item a la cola exps: ${error.message}`,
@@ -119,23 +120,5 @@ export class QueueService {
         completed: notificationsCompleted,
       },
     };
-  }
-
-  async addExperimentJob(data: any, opts?: any) {
-    this.logger.log(`Adding experiment job with data: ${JSON.stringify(data)}`);
-    const job = await this.expsQueue.add(JOB_NAMES.PROCESS_EXP, data, opts);
-    return { id: job.id, name: job.name };
-  }
-
-  async addNotificationJob(data: any, opts?: any) {
-    this.logger.log(
-      `Adding notification job with data: ${JSON.stringify(data)}`,
-    );
-    const job = await this.notificationsQueue.add(
-      "send-notification",
-      data,
-      opts,
-    );
-    return { id: job.id, name: job.name };
   }
 }
