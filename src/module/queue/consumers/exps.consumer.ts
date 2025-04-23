@@ -4,10 +4,7 @@ import { Processor, WorkerHost, OnWorkerEvent } from "@nestjs/bullmq";
 import { Logger, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Job } from "bullmq";
-import {
-  ExpedienteObjeto,
-  ExpQueueItem,
-} from "../../../common/interfaces/queue-items.interface";
+import { ExpQueueItem } from "../../../common/interfaces/queue-items.interface";
 import { QueueService } from "../queue.service";
 import { QUEUE_NAMES } from "../../../common/constants/queue.constants";
 import { HashService } from "src/common/hash/hash.service";
@@ -68,105 +65,6 @@ export class ExpsConsumer extends WorkerHost {
    * Procesa los elementos de la cola 'exps'
    * BullMQ tiene más características para manejo de trabajos
    */
-  // async process(job: Job<ExpQueueItem>): Promise<ExpJobResult> {
-  //   const { id, data } = job.data;
-  //   this.logger.log(`Procesando exp: ${id}`);
-
-  //   const url = data.expediente.url;
-  //   const usuarioExpedienteId = data.usuarioExpedientesId;
-  //   const expedienteId = data.expedienteId;
-  //   try {
-  //     // Actualizar progreso del trabajo
-  //     await job.updateProgress(10);
-
-  //     const expedienteResult: ExpedienteObjeto[] =
-  //       await this.queueService.fetchExpediente(url);
-  //     // Con BullMQ podemos actualizar los datos del trabajo
-
-  //     // 1. Se hashea el nuevo acuerdos
-
-  //     const acuerdoHashed = await this.hashService.hashearAcuerdos(
-  //       JSON.stringify(expedienteResult),
-  //     );
-
-  //     // 2 . Se obtiene el hashAnterior
-  //     // 2.1. Buscamos el hashAnterior en la tabla historial
-  //     // 2.2 Si no hay ningun registro. Se crea con el expedienteId y el acuerdo hasheado y su valo
-  //     const as = await this.queueService.comparacionAcuerdos({
-  //       acuerdo: expedienteResult,
-  //       hashNuevo: acuerdoHashed,
-  //       usuarioExpediente: usuarioExpedienteId,
-  //     });
-  //     console.log(as);
-  //     // 3.  Se guarda el acuerdoNuevo
-
-  //     await this.queueService.updateAcuerdosExpediente(
-  //       expedienteId,
-  //       expedienteResult,
-  //     );
-
-  //     await job.updateData({
-  //       ...job.data,
-  //       status: "processing",
-  //       processedAt: new Date(),
-  //     });
-  //     await job.updateProgress(30);
-  //     //await this.queueService.fetchExpediente(url);
-
-  //     // Simular procesamiento con un tiempo aleatorio (entre 1-3 segundos)
-  //     const processingTime = Math.floor(Math.random() * 2000) + 1000;
-  //     await new Promise((resolve) => setTimeout(resolve, processingTime));
-
-  //     await job.updateProgress(70);
-
-  //     // Procesamiento simulado del objeto
-  //     const result: ExpJobResult = {
-  //       id,
-  //       processed: true,
-  //       processingTime,
-  //       result: `Datos procesados: ${JSON.stringify(data)}`,
-  //     };
-
-  //     // Verificamos si debemos enviar una notificación (simulamos con 50% de probabilidad)
-  //     const shouldNotify = Math.random() > 0.5;
-
-  //     if (shouldNotify) {
-  //       // Crear una notificación y enviarla a la cola 'notifications'
-  //       await this.queueService.addToNotificationsQueue({
-  //         id: `notif-${id}-${Date.now()}`,
-  //         expId: id,
-  //         type: Math.random() > 0.5 ? "email" : "push",
-  //         recipient: "usuario@ejemplo.com",
-  //         content: {
-  //           message: `Se ha procesado el exp ${id}`,
-  //           details: result,
-  //         },
-  //         status: "pending",
-  //       });
-  //     }
-
-  //     await job.updateProgress(100);
-
-  //     // Actualizar el trabajo como completado
-  //     await job.updateData({
-  //       ...job.data,
-  //       status: "processing",
-  //       processedAt: new Date(),
-  //     });
-
-  //     return result;
-  //   } catch (error) {
-  //     // En caso de error, actualizar el estado y reintentar si es necesario
-  //     await job.updateData({
-  //       ...job.data,
-  //       status: "failed",
-  //       retries: (job.data.retries || 0) + 1,
-  //     });
-
-  //     throw error;
-  //   }
-  // }
-
   async process(job: Job<ExpQueueItem>): Promise<ExpJobResult> {
     const startTime = Date.now();
     const { id, data } = job.data;
@@ -175,10 +73,19 @@ export class ExpsConsumer extends WorkerHost {
     try {
       // Extraer datos necesarios
       const { expediente, usuarioExpedientesId, expedienteId } = data;
+      // Actualizar progreso: 10%
+      await job.updateProgress(10);
+      this.logger.log(`Progreso exp ${id}: 10% - Iniciando proceso`);
 
       // Paso 1: Obtener el expediente de la fuente externa
       const expedienteResult = await this.queueService.fetchExpediente(
         expediente.url,
+      );
+
+      // Actualizar progreso: 40%
+      await job.updateProgress(40);
+      this.logger.log(
+        `Progreso exp ${id}: 40% - Expediente obtenido de fuente externa`,
       );
 
       // Paso 2: Hashear los nuevos acuerdos
@@ -186,18 +93,48 @@ export class ExpsConsumer extends WorkerHost {
         JSON.stringify(expedienteResult),
       );
 
+      // Actualizar progreso: 60%
+      await job.updateProgress(60);
+      this.logger.log(`Progreso exp ${id}: 60% - Hash generado`);
+
       // Paso 3: Comparar con acuerdos anteriores
-      const comparacionResult = await this.queueService.comparacionAcuerdos({
-        acuerdo: expedienteResult,
+      const resultadoComparacion = await this.queueService.comparacionAcuerdos({
+        acuerdosActuales: expedienteResult,
         hashNuevo: acuerdoHashed,
         usuarioExpediente: usuarioExpedientesId,
       });
-      console.log(comparacionResult);
+
+      // Actualizar progreso: 80%
+      await job.updateProgress(80);
+      this.logger.log(`Progreso exp ${id}: 80% - Comparación completada`);
+
+      if (
+        typeof resultadoComparacion === "object" &&
+        resultadoComparacion !== null
+      ) {
+        if (resultadoComparacion.haCambiado === true) {
+          // Agregar a la cola de notificaciones con todo el objeto
+          await this.queueService.addToNotificationsQueue({
+            id: `notif-${id}-${Date.now()}`,
+            expId: id,
+            content: resultadoComparacion,
+            status: "pending",
+          });
+
+          this.logger.log(
+            `Exp ${id}: Cambios detectados, agregado a cola de notificaciones`,
+          );
+        }
+      }
       // Paso 4: Actualizar los acuerdos en la base de datos
       await this.queueService.updateAcuerdosExpediente(
         expedienteId,
         expedienteResult,
       );
+
+      // Actualizar progreso: 100%
+      await job.updateProgress(100);
+      this.logger.log(`Progreso exp ${id}: 100% - Proceso completado`);
 
       // Generar resultado
       const processingTime = Date.now() - startTime;

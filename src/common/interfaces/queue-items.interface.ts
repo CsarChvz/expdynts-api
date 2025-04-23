@@ -1,3 +1,4 @@
+import { ComparacionResultado } from "src/module/queue/types/expedientes.queue.t";
 import type { UsuarioExpedienteConExpediente } from "../../database/schema";
 
 interface ExpQueueItem {
@@ -13,9 +14,7 @@ interface ExpQueueItem {
 interface NotificationQueueItem {
   id: string;
   expId: string;
-  type: "email" | "sms" | "push";
-  recipient: string;
-  content: any;
+  content: ComparacionResultado;
   status: "pending" | "sent" | "failed";
   retries?: number;
 }

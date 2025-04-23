@@ -17,13 +17,12 @@ import { DATABASE_CONNECTION } from "src/database/database-connection";
 import * as schema from "../../database/schema";
 import { v4 as uuid } from "uuid";
 import { desc, eq } from "drizzle-orm";
+import {
+  Acuerdo,
+  ComparacionResultado,
+  PropsAcuerdos,
+} from "./types/expedientes.queue.t";
 
-type Acuerdo = Record<string, any>; // flexible tipo JSON
-interface propsAcuerdos {
-  usuarioExpediente: number;
-  hashNuevo: string;
-  acuerdo: ExpedienteObjeto[];
-}
 @Injectable()
 export class QueueService {
   private readonly logger = new Logger(QueueService.name);
@@ -81,7 +80,7 @@ export class QueueService {
         JOB_NAMES.SEND_NOTIFICATION,
         item,
         {
-          priority: item.type === "email" ? 2 : 1, // Priorizar según tipo
+          priority: 1, // Priorizar según tipo
           attempts: 3,
           backoff: {
             type: "exponential",
@@ -159,6 +158,33 @@ export class QueueService {
     return result.data.data;
   }
 
+  async sendNotification(
+    endPoint: string,
+    contentMessage: {
+      phone: string;
+      text: string;
+    },
+  ) {
+    const payload = {
+      chatId: contentMessage.phone + "@c.us",
+      reply_to: null,
+      text: contentMessage.text,
+      linkPreview: true,
+      linkPreviewHighQuality: false,
+      session: "default",
+    };
+    const result = await lastValueFrom(
+      this.httpService.post(process.env.NOTIFICATION_URL + endPoint, payload, {
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+    console.log(result);
+    return result.data;
+  }
+
   // Actualización del campo acuerdos_json
   async updateAcuerdosExpediente(
     expedienteId: number,
@@ -170,16 +196,11 @@ export class QueueService {
       .where(eq(schema.expedientes.expedienteId, expedienteId));
   }
 
-  // 2 . Se obtiene el hashAnterior
-  // 2.1. Buscamos el hashAnterior en la tabla historial
-  // 2.2 Si no hay ningun registro. Se crea con el expedienteId y el acuerdo hasheado y su valo
-
-  // 3.  Se guarda el acuerdoNuevo
   async comparacionAcuerdos({
     usuarioExpediente,
     hashNuevo,
-    acuerdo,
-  }: propsAcuerdos) {
+    acuerdosActuales,
+  }: PropsAcuerdos): Promise<ComparacionResultado> {
     // 1. Buscar el último hash guardado para ese expediente
     const ultimoAcuerdo = await this.database.query.acuerdosHistorial.findFirst(
       {
@@ -196,7 +217,7 @@ export class QueueService {
     // 2. Si no hay acuerdo anterior, se guarda directamente
     if (!ultimoAcuerdo) {
       await this.database.insert(schema.acuerdosHistorial).values({
-        acuerdos: acuerdo,
+        acuerdos: acuerdosActuales,
         usuarioExpedienteId: usuarioExpediente,
         hash: hashNuevo,
         createdAt: new Date(),
@@ -211,24 +232,81 @@ export class QueueService {
 
     // 3. Si ya hay un hash, se compara con el nuevo
     const haCambiado = hashAnterior !== hashNuevo;
-    console.log(String(hashAnterior).slice(0, 10));
-    console.log("-----------------------------------------");
-    console.log(String(hashNuevo).slice(0, 10));
 
     if (haCambiado) {
-      // 3.1 Guardamos el nuevo hash si ha cambiado
-      await this.database.insert(schema.acuerdosHistorial).values({
-        acuerdos: acuerdo,
-        usuarioExpedienteId: usuarioExpediente,
-        hash: hashNuevo,
-        createdAt: new Date(),
-      });
+      const acuerdosAnteriores = ultimoAcuerdo.acuerdos as ExpedienteObjeto[];
+      const cambiosRealizados = this.detectarCambiosEnAcuerdos(
+        acuerdosAnteriores,
+        acuerdosActuales,
+      );
 
-      return {
-        nuevoRegistro: false,
-        haCambiado: true,
-        mensaje: "El acuerdo ha cambiado. Se registró un nuevo hash.",
-      };
+      // 3.1 Guardamos el nuevo hash si ha cambiado
+      const acuerdoHistorialNuevo = await this.database
+        .insert(schema.acuerdosHistorial)
+        .values({
+          acuerdos: cambiosRealizados, // Guardamos solo los cambios detectados
+          usuarioExpedienteId: usuarioExpediente,
+          hash: hashNuevo,
+          createdAt: new Date(),
+        })
+        .returning({
+          userExpedienteId: schema.acuerdosHistorial.usuarioExpedienteId,
+        });
+
+      // Consulta mejorada para obtener datos del usuario y sus atributos
+      const userExpediente =
+        await this.database.query.usuarioExpedientes.findFirst({
+          where: eq(
+            schema.usuarioExpedientes.usuarioExpedientesId,
+            acuerdoHistorialNuevo[0].userExpedienteId,
+          ),
+          with: {
+            usuario: {
+              with: {
+                attributes: {
+                  columns: {
+                    nombre_usuario: true,
+                    apellido: true,
+                    phoneNumber: true,
+                    preferencias: true,
+                  },
+                },
+              },
+            },
+            expediente: {
+              columns: {
+                exp: true,
+                extracto: true,
+                cve_juz: true,
+                fecha: true,
+              },
+            },
+          },
+        });
+
+      if (
+        userExpediente?.expediente.exp !== undefined &&
+        userExpediente?.expediente.fecha !== undefined &&
+        userExpediente?.expediente.extracto !== undefined &&
+        userExpediente?.expediente.cve_juz !== undefined
+      ) {
+        return {
+          nuevoRegistro: false,
+          haCambiado: true,
+          mensaje: "Nuevo acuerdo",
+          data: {
+            cambiosRealizados,
+            atributosUsuario: {
+              telefono: userExpediente?.usuario.attributes.phoneNumber ?? "",
+            },
+            expediente: {
+              exp: userExpediente.expediente.exp,
+              fecha: userExpediente.expediente.fecha,
+              cve_juz: userExpediente.expediente.cve_juz,
+            },
+          },
+        };
+      }
     }
 
     // 4. Si no ha cambiado, no hacemos nada
@@ -237,5 +315,69 @@ export class QueueService {
       haCambiado: false,
       mensaje: "El acuerdo es el mismo. No se creó un nuevo registro.",
     };
+  }
+
+  detectarCambiosEnAcuerdos(
+    acuerdosAnteriores: ExpedienteObjeto[] | undefined | null,
+    acuerdosActuales: ExpedienteObjeto[] | undefined | null,
+  ): ExpedienteObjeto[] {
+    const cambios: ExpedienteObjeto[] = [];
+
+    // Verificación defensiva: si alguno de los arreglos es null o undefined, los tratamos como vacíos
+    const anteriores = acuerdosAnteriores || [];
+    const actuales = acuerdosActuales || [];
+
+    // Crear un mapa de los acuerdos anteriores usando una clave compuesta
+    const mapaAcuerdosAnteriores = new Map<string, ExpedienteObjeto>();
+    anteriores.forEach((acuerdo) => {
+      const clave = `${acuerdo.EXP}-${acuerdo.FCH_ACU}`;
+      mapaAcuerdosAnteriores.set(clave, acuerdo);
+    });
+
+    // Verificar cada acuerdo actual contra los anteriores
+    actuales.forEach((acuerdoActual) => {
+      const clave = `${acuerdoActual.EXP}-${acuerdoActual.FCH_ACU}`;
+      const acuerdoAnterior = mapaAcuerdosAnteriores.get(clave);
+
+      // Si no existe el acuerdo anterior con la misma clave, es nuevo
+      if (!acuerdoAnterior) {
+        cambios.push(acuerdoActual);
+        return;
+      }
+
+      // Si existe, verificamos si algún campo relevante ha cambiado
+      const camposRelevantes: (keyof ExpedienteObjeto)[] = [
+        "DESCRIP",
+        "NOTIFICACI",
+        "BOLETIN",
+        "BOLETIN2",
+        "BOLETIN3",
+        "TIPO",
+        "DI",
+        "FCH_RES",
+        "act_names",
+        "dem_names",
+        "aut_names",
+        "pro_names",
+      ];
+
+      const hayCambios = camposRelevantes.some(
+        (campo) => acuerdoAnterior[campo] !== acuerdoActual[campo],
+      );
+
+      if (hayCambios) {
+        cambios.push(acuerdoActual);
+      }
+
+      // Eliminar del mapa para rastrear después los que fueron eliminados
+      mapaAcuerdosAnteriores.delete(clave);
+    });
+
+    // Los acuerdos eliminados también son cambios importantes
+    mapaAcuerdosAnteriores.forEach((acuerdoEliminado) => {
+      cambios.push(acuerdoEliminado);
+    });
+
+    return cambios;
   }
 }

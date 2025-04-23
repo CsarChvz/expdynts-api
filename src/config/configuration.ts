@@ -24,4 +24,7 @@ export default () => ({
   cron: {
     dataFetchInterval: process.env.DATA_FETCH_CRON || "*/10 * * * * *", // Por defecto cada 10 segundos
   },
+  hash: {
+    encryptionKey: process.env.ENCRYPTION_KEY || "tu-clave-privada",
+  },
 });

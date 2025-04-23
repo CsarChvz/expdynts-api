@@ -236,3 +236,4 @@ export type UsuarioExpedientes = typeof usuarioExpedientes.$inferSelect;
 export type UsuarioExpedienteConExpediente = UsuarioExpedientes & {
   expediente: Expediente;
 };
+export type UsuarioAtributos = typeof usuarioAttributes.$inferInsert;

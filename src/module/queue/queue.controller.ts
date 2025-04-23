@@ -1,4 +1,4 @@
-import { Controller } from "@nestjs/common";
+import { Controller, Post } from "@nestjs/common";
 import { QueueService } from "./queue.service";
 import { ApiTags } from "@nestjs/swagger";
 
@@ -6,4 +6,9 @@ import { ApiTags } from "@nestjs/swagger";
 @Controller("queue")
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
+
+  @Post("phone")
+  async phoneSend() {
+    await this.queueService.sendNotification("api/sendText");
+  }
 }
