@@ -181,7 +181,6 @@ export class QueueService {
         },
       }),
     );
-    console.log(result);
     return result.data;
   }
 

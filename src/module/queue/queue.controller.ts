@@ -9,6 +9,9 @@ export class QueueController {
 
   @Post("phone")
   async phoneSend() {
-    await this.queueService.sendNotification("api/sendText");
+    await this.queueService.sendNotification("api/sendText", {
+      phone: "5213314825663",
+      text: "Esto es prueba",
+    });
   }
 }

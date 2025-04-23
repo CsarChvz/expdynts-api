@@ -8,6 +8,7 @@ import { Job } from "bullmq";
 import { QUEUE_NAMES } from "../../../common/constants/queue.constants";
 import { NotificationQueueItem } from "src/common/interfaces/queue-items.interface";
 import { QueueService } from "../queue.service";
+import { ComparacionResultado } from "../types/expedientes.queue.t";
 
 interface NotificationJobResult {
   id: string;
@@ -73,12 +74,11 @@ export class NotificationsConsumer extends WorkerHost {
       const expediente = data?.expediente;
       const cambios = data?.cambiosRealizados ?? [];
 
-      const textoWhatsApp = `📢 *Actualización de tu expediente judicial*
-      *¡Gracias por usar nuestro servicio!* 🙌`;
+      const textoWhatsApp = this.formatMessage(content);
 
       await this.queueService.sendNotification("api/sendText", {
-        phone: "5213314825663",
-        text: JSON.stringify(cambios),
+        phone: telefono,
+        text: textoWhatsApp,
       });
 
       await job.updateProgress(80);
@@ -105,5 +105,107 @@ export class NotificationsConsumer extends WorkerHost {
 
       throw error;
     }
+  }
+
+  /*
+   * Formatea un mensaje basado en los resultados de comparación de expedientes
+   * @param data Objeto con los datos de comparación
+   * @returns Un mensaje formateado
+   */
+  formatMessage(data: ComparacionResultado): string {
+    // Inicializamos el mensaje
+    let message = "";
+
+    // Si es un nuevo registro
+    if (data.nuevoRegistro) {
+      message += "🆕 *¡Nuevo expediente detectado!*\n\n";
+    }
+    // Si hay cambios en un registro existente
+    else if (data.haCambiado && data.data) {
+      message += "📝 *Se han detectado cambios en un expediente existente*\n\n";
+    }
+    // Si no hay cambios ni es nuevo
+    else {
+      return "✅ No se han detectado cambios en los expedientes monitoreados.";
+    }
+
+    // Si tenemos datos para mostrar
+    if (data.data) {
+      const { expediente, cambiosRealizados, atributosUsuario } = data.data;
+
+      // Información del expediente
+      message += `*Expediente:* ${expediente.exp}\n`;
+      message += `*Fecha:* ${this.formatDate(expediente.fecha)}\n`;
+      message += `*Juzgado:* ${expediente.cve_juz}\n`;
+
+      // Información de contacto
+      if (atributosUsuario && atributosUsuario.telefono) {
+        message += `*Teléfono de contacto:* ${atributosUsuario.telefono}\n`;
+      }
+
+      // Detalles de cambios realizados
+      if (cambiosRealizados && cambiosRealizados.length > 0) {
+        message += "\n*Cambios realizados:*\n";
+
+        cambiosRealizados.forEach((cambio, index) => {
+          message += `\n📋 *Cambio ${index + 1}:*\n`;
+          message += `• *Expediente:* ${cambio.EXP}\n`;
+          message += `• *Juzgado:* ${cambio.CVE_JUZ}\n`;
+
+          // Fechas importantes
+          if (cambio.FCH_PRO)
+            message += `• *Fecha de procedimiento:* ${cambio.FCH_PRO}\n`;
+          if (cambio.FCH_ACU)
+            message += `• *Fecha de acuerdo:* ${cambio.FCH_ACU}\n`;
+          if (cambio.FCH_RES)
+            message += `• *Fecha de resolución:* ${cambio.FCH_RES}\n`;
+
+          // Información de boletín
+          if (cambio.BOLETIN)
+            message += `• *Boletín principal:* ${cambio.BOLETIN}\n`;
+          if (cambio.BOLETIN2)
+            message += `• *Boletín secundario:* ${cambio.BOLETIN2}\n`;
+          if (cambio.BOLETIN3)
+            message += `• *Boletín terciario:* ${cambio.BOLETIN3}\n`;
+
+          // Tipo y notificación
+          message += `• *Tipo:* ${cambio.TIPO}\n`;
+          message += `• *Notificación:* ${cambio.NOTIFICACI}\n`;
+          message += `• *DI:* ${cambio.DI}\n`;
+
+          // Descripción
+          if (cambio.DESCRIP) {
+            message += `• *Descripción:*\n  "${cambio.DESCRIP}"\n`;
+          }
+
+          // Personas involucradas
+          if (cambio.act_names) message += `• *Actores:* ${cambio.act_names}\n`;
+          if (cambio.dem_names)
+            message += `• *Demandados:* ${cambio.dem_names}\n`;
+          if (cambio.aut_names)
+            message += `• *Autoridades:* ${cambio.aut_names}\n`;
+          if (cambio.pro_names)
+            message += `• *Procedimiento:* ${cambio.pro_names}\n`;
+        });
+      }
+    }
+
+    return message;
+  }
+
+  /*
+   * Convierte un timestamp a formato de fecha legible
+   * @param timestamp Timestamp en milisegundos
+   * @returns Fecha formateada (DD/MM/YYYY)
+   */
+  formatDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 }
