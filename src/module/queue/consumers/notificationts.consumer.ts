@@ -76,7 +76,7 @@ export class NotificationsConsumer extends WorkerHost {
 
       const textoWhatsApp = this.formatMessage(content);
 
-      await this.queueService.sendNotification("api/sendText", {
+      await this.queueService.sendNotification("/api/sendText", {
         phone: telefono,
         text: textoWhatsApp,
       });
