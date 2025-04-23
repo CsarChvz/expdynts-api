@@ -207,17 +207,12 @@ export class QueueService {
           schema.acuerdosHistorial.usuarioExpedienteId,
           usuarioExpediente,
         ),
-        with: {
-          usuarioExpediente: {
-            with: {
-              expediente: true,
-            },
-          },
-        },
         orderBy: [desc(schema.acuerdosHistorial.createdAt)],
       },
     );
+
     const hashAnterior = ultimoAcuerdo?.hash;
+
     // 2. Si no hay acuerdo anterior, se guarda directamente
     if (!ultimoAcuerdo) {
       await this.database.insert(schema.acuerdosHistorial).values({
@@ -238,10 +233,7 @@ export class QueueService {
     const haCambiado = hashAnterior !== hashNuevo;
 
     if (haCambiado) {
-      // Se TODO el extracto actualizado
-      const acuerdosAnteriores = ultimoAcuerdo.usuarioExpediente.expediente
-        .acuerdos_json as ExpedienteObjeto[];
-      //const acuerdosAnteriores = ultimoAcuerdo.acuerdos as ExpedienteObjeto[];
+      const acuerdosAnteriores = ultimoAcuerdo.acuerdos as ExpedienteObjeto[];
       const cambiosRealizados = this.detectarCambiosEnAcuerdos(
         acuerdosAnteriores,
         acuerdosActuales,
