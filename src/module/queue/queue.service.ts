@@ -243,8 +243,9 @@ export class QueueService {
       const acuerdoHistorialNuevo = await this.database
         .insert(schema.acuerdosHistorial)
         .values({
-          acuerdos: cambiosRealizados, // Guardamos solo los cambios detectados
+          acuerdos: acuerdosActuales,
           usuarioExpedienteId: usuarioExpediente,
+          cambios_realizados: cambiosRealizados,
           hash: hashNuevo,
           createdAt: new Date(),
         })

@@ -84,6 +84,7 @@ export const acuerdosHistorial = createTable(
       }),
     acuerdos: json("acuerdos").notNull(),
     hash: json("hash").notNull(),
+    cambios_realizados: json("cambios_realizados"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
