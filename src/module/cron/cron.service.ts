@@ -17,7 +17,7 @@ export class CronService {
     private readonly database: NeonHttpDatabase<typeof schema>,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_10AM, {
+  @Cron(CronExpression.EVERY_DAY_AT_3PM, {
     timeZone: "America/Mexico_City", // o la zona que necesites
   })
   async getExpsAndAddToQueue() {
