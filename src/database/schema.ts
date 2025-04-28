@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern */
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 // schema.ts
@@ -7,7 +6,6 @@ import {
   index,
   pgTableCreator,
   varchar,
-  text,
   timestamp,
   integer,
   json,
@@ -22,30 +20,11 @@ import {
  */
 export const createTable = pgTableCreator((name) => `expdynts_${name}`);
 
-export const posts = createTable(
-  "post",
-  (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
-    createdAt: d
-      .timestamp({ withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-  }),
-  (t) => [index("name_idx").on(t.name)],
-);
-
 // Enums
 export const estadoExpediente = pgEnum("estado_expediente", [
   "ACTIVE",
   "ARCHIVED",
 ]);
-export const estadoBusqueda = pgEnum("estado_busqueda", [
-  "CHECKED",
-  "UNCHECKED",
-]);
-
 // Tabla de extractos (catálogo principal)
 export const extractos = createTable(
   "extractos",
@@ -53,7 +32,6 @@ export const extractos = createTable(
     extractoId: d.varchar({ length: 50 }).primaryKey(), // "ZM", "PENALT", "FRNS", etc.
     name: d.varchar({ length: 120 }).notNull(), // "Zona Metropolitana", "Penales", "Foraneos"
     key_search: d.varchar({ length: 100 }), // "zmg", "penal", "forean"
-    color: d.varchar({ length: 50 }), // "blue", "red", "green"
   }),
   (t) => [index("extractos_id_idx").on(t.extractoId)],
 );
@@ -189,23 +167,6 @@ export const usuarioExpedientes = createTable(
   ],
 );
 
-export const busquedaCheck = createTable(
-  "busqueda_check",
-  {
-    busquedaCheckId: integer().primaryKey().generatedByDefaultAsIdentity(),
-    status: estadoBusqueda("status").default("CHECKED").notNull(),
-    descripcion: text("descripcion"),
-    ultimaEjecucion: timestamp("ultima_ejecucion"),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (t) => [index("busqueda_check_ejecucion_idx").on(t.ultimaEjecucion)],
-);
-
 // Relaciones para usuarios
 export const usuariosRelations = relations(usuarios, ({ one, many }) => ({
   attributes: one(usuarioAttributes, {
@@ -275,9 +236,6 @@ export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
   }),
   expedientes: many(expedientes),
 }));
-
-// Relaciones para busquedaCheck (si tiene relaciones)
-export const busquedaCheckRelations = relations(busquedaCheck, ({}) => ({}));
 
 // Tipos para las relaciones (opcional pero recomendado)
 export type Usuario = typeof usuarios.$inferSelect;
