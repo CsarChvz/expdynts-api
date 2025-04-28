@@ -46,13 +46,38 @@ export const estadoBusqueda = pgEnum("estado_busqueda", [
   "UNCHECKED",
 ]);
 
-export const extractoEnum = pgEnum("extracto", [
-  "ZM",
-  "FRNS",
-  "PENALT",
-  "POPF",
-  "LABORAL",
-]);
+// Tabla de extractos (catálogo principal)
+export const extractos = createTable(
+  "extractos",
+  (d) => ({
+    extractoId: d.varchar({ length: 50 }).primaryKey(), // "ZM", "PENALT", "FRNS", etc.
+    name: d.varchar({ length: 120 }).notNull(), // "Zona Metropolitana", "Penales", "Foraneos"
+    key_search: d.varchar({ length: 100 }), // "zmg", "penal", "forean"
+    color: d.varchar({ length: 50 }), // "blue", "red", "green"
+  }),
+  (t) => [index("extractos_id_idx").on(t.extractoId)],
+);
+
+// Tabla de juzgados (subcatálogo relacionado con extractos)
+// ID compuesto como "{extractoId}-{value}" (por ejemplo: "ZM-F02", "PENALT-03P")
+export const juzgados = createTable(
+  "juzgados",
+  {
+    juzgadoId: varchar("juzgadoId", { length: 50 }).primaryKey(), // "ZM-F02", "PENALT-03P"
+    value: varchar("value", { length: 50 }).notNull(), // "F02", "03P"
+    name: varchar("name", { length: 255 }).notNull(), // "JUZGADO SEGUNDO DE LO FAMILIAR", "JUZGADO TERCERO DE LO PENAL"
+    judge: varchar("judge", { length: 100 }).notNull(), // "ZM", "PENALT" (igual al extractoId)
+    key_search: varchar("key_search", { length: 100 }), // "zmg", "penal"
+    extractoId: varchar("extracto_id", { length: 50 })
+      .notNull()
+      .references(() => extractos.extractoId, { onDelete: "cascade" }),
+  },
+  (t) => [
+    index("juzgados_value_idx").on(t.value),
+    index("juzgados_judge_idx").on(t.judge),
+    index("juzgados_extracto_idx").on(t.extractoId),
+  ],
+);
 
 export const expedientes = createTable(
   "expedientes",
@@ -60,8 +85,11 @@ export const expedientes = createTable(
     expedienteId: integer().primaryKey().generatedByDefaultAsIdentity(),
     exp: integer("exp").notNull(),
     fecha: integer("fecha").notNull(),
-    extracto: extractoEnum("extracto").notNull(),
     cve_juz: varchar("cve_juz", { length: 255 }).notNull(),
+    juzgadoId: varchar("juzgado_id", { length: 50 }).references(
+      () => juzgados.juzgadoId,
+      { onDelete: "set null" },
+    ),
     url: varchar("url", { length: 255 }).notNull(),
     acuerdos_json: json("acuerdos_json").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -70,7 +98,10 @@ export const expedientes = createTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [index("expedientes_exp_idx").on(t.exp)],
+  (t) => [
+    index("expedientes_exp_idx").on(t.exp),
+    index("expedientes_juzgado_idx").on(t.juzgadoId),
+  ],
 );
 
 export const acuerdosHistorial = createTable(
@@ -209,13 +240,17 @@ export const usuarioExpedientesRelations = relations(
     }),
   }),
 );
+
 // Relaciones para expedientes
-export const expedientesRelations = relations(expedientes, ({ many }) => ({
+export const expedientesRelations = relations(expedientes, ({ many, one }) => ({
   historialAcuerdos: many(acuerdosHistorial),
   usuarioExpedientes: many(usuarioExpedientes),
+  juzgado: one(juzgados, {
+    fields: [expedientes.juzgadoId],
+    references: [juzgados.juzgadoId],
+  }),
 }));
 
-// Relación para acuerdosHistorial
 // Relaciones para acuerdosHistorial
 export const acuerdosHistorialRelations = relations(
   acuerdosHistorial,
@@ -226,6 +261,20 @@ export const acuerdosHistorialRelations = relations(
     }),
   }),
 );
+
+// Relaciones para extractos
+export const extractosRelations = relations(extractos, ({ many }) => ({
+  juzgados: many(juzgados),
+}));
+
+// Relaciones para juzgados
+export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
+  extracto: one(extractos, {
+    fields: [juzgados.extractoId],
+    references: [extractos.extractoId],
+  }),
+  expedientes: many(expedientes),
+}));
 
 // Relaciones para busquedaCheck (si tiene relaciones)
 export const busquedaCheckRelations = relations(busquedaCheck, ({}) => ({}));
@@ -238,3 +287,5 @@ export type UsuarioExpedienteConExpediente = UsuarioExpedientes & {
   expediente: Expediente;
 };
 export type UsuarioAtributos = typeof usuarioAttributes.$inferInsert;
+export type Juzgado = typeof juzgados.$inferSelect;
+export type Extracto = typeof extractos.$inferSelect;
