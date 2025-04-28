@@ -21,6 +21,10 @@ export class CronService {
     timeZone: "America/Mexico_City", // o la zona que necesites
   })
   async getExpsAndAddToQueue() {
+    await this.queueService.sendNotification("/api/sendText", {
+      phone: "5213314825663",
+      text: "Inicio de CRON y Colas [Job]",
+    });
     try {
       this.logger.log(
         "[GET_AND_QUEUE] - Obtener registros y agregarlos a la cola.",
