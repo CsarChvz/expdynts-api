@@ -64,8 +64,7 @@ export const expedientes = createTable(
     expedienteId: integer().primaryKey().generatedByDefaultAsIdentity(),
     exp: integer("exp").notNull(),
     fecha: integer("fecha").notNull(),
-    cve_juz: varchar("cve_juz", { length: 255 }).notNull(),
-    juzgadoId: varchar("juzgado_id", { length: 50 }).references(
+    cve_juz: varchar("cve_juz", { length: 50 }).references(
       () => juzgados.juzgadoId,
       { onDelete: "set null" },
     ),
@@ -79,8 +78,8 @@ export const expedientes = createTable(
   },
   (t) => [
     index("expedientes_exp_idx").on(t.exp),
-    index("expedientes_juzgado_idx").on(t.juzgadoId),
-    index("expedientes_fecha_juzgado_idx").on(t.fecha, t.juzgadoId), // índice compuesto
+    index("expedientes_juzgado_idx").on(t.cve_juz),
+    index("expedientes_fecha_juzgado_idx").on(t.fecha, t.cve_juz), // índice compuesto
   ],
 );
 
@@ -207,7 +206,7 @@ export const expedientesRelations = relations(expedientes, ({ many, one }) => ({
   historialAcuerdos: many(acuerdosHistorial),
   usuarioExpedientes: many(usuarioExpedientes),
   juzgado: one(juzgados, {
-    fields: [expedientes.juzgadoId],
+    fields: [expedientes.cve_juz],
     references: [juzgados.juzgadoId],
   }),
 }));
@@ -254,7 +253,7 @@ export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
       extractoNombre: extractos.extracto_name,
     })
     .from(expedientes)
-    .leftJoin(juzgados, sql`${expedientes.juzgadoId} = ${juzgados.juzgadoId}`)
+    .leftJoin(juzgados, sql`${expedientes.cve_juz} = ${juzgados.juzgadoId}`)
     .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
 });
 
@@ -359,7 +358,7 @@ export const detalleExpedienteConHistorialAcuerdos = pgView(
       usuarioAttributes,
       eq(usuarios.usuarioId, usuarioAttributes.usuarioAttributeId),
     )
-    .leftJoin(juzgados, eq(expedientes.juzgadoId, juzgados.juzgadoId))
+    .leftJoin(juzgados, eq(expedientes.cve_juz, juzgados.juzgadoId))
     .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId));
 });
 
