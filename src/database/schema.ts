@@ -11,6 +11,7 @@ import {
   json,
   pgEnum,
   uniqueIndex,
+  pgView,
 } from "drizzle-orm/pg-core";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -45,7 +46,6 @@ export const juzgados = createTable(
     value: varchar("value", { length: 50 }).notNull(), // "F02", "03P"
     name: varchar("name", { length: 255 }).notNull(), // "JUZGADO SEGUNDO DE LO FAMILIAR", "JUZGADO TERCERO DE LO PENAL"
     judge: varchar("judge", { length: 100 }).notNull(), // "ZM", "PENALT" (igual al extractoId)
-    key_search: varchar("key_search", { length: 100 }), // "zmg", "penal"
     extractoId: varchar("extracto_id", { length: 50 })
       .notNull()
       .references(() => extractos.extractoId, { onDelete: "cascade" }),
@@ -79,6 +79,10 @@ export const expedientes = createTable(
   (t) => [
     index("expedientes_exp_idx").on(t.exp),
     index("expedientes_juzgado_idx").on(t.juzgadoId),
+    index("expedientes_fecha_juzgado_idx").on(t.fecha, t.juzgadoId), // índice compuesto
+    index("expedientes_recent_idx")
+      .on(t.fecha)
+      .where(sql`fecha > NOW() - INTERVAL '30 days'`),
   ],
 );
 
@@ -236,6 +240,80 @@ export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
   }),
   expedientes: many(expedientes),
 }));
+
+// Vistas
+// Vista 1: Expedientes completos con información de juzgado y extracto
+export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
+  return qb
+    .select({
+      expedienteId: expedientes.expedienteId,
+      numero: expedientes.exp,
+      fecha: expedientes.fecha,
+      url: expedientes.url,
+      createdAt: expedientes.createdAt,
+      juzgadoId: juzgados.juzgadoId,
+      juzgadoNombre: juzgados.name,
+      juzgadoValue: juzgados.value,
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.name,
+    })
+    .from(expedientes)
+    .leftJoin(juzgados, sql`${expedientes.juzgadoId} = ${juzgados.juzgadoId}`)
+    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
+});
+
+// Vista completa para obtener juzgados en formato específico
+export const juzgadosFormateados = pgView("juzgados_formateados").as((qb) => {
+  return qb
+    .select({
+      // Campos seleccionados según el formato requerido
+      value: juzgados.value,
+      name: juzgados.name,
+      judge: juzgados.judge,
+      id: juzgados.juzgadoId, // Este es el campo "id" en tu resultado esperado
+      key_search: extractos.key_search, // Ahora viene de extractos
+      // Campos adicionales que pueden ser útiles
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.name,
+    })
+    .from(juzgados)
+    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
+});
+
+// Vista simple y directa para obtener los juzgados en el formato requerido
+export const listaJuzgados = pgView("lista_juzgados").as((qb) => {
+  return qb
+    .select({
+      value: juzgados.value,
+      name: juzgados.name,
+      judge: juzgados.judge,
+      id: juzgados.juzgadoId,
+      key_search: extractos.key_search, // Ahora viene de extractos
+    })
+    .from(juzgados)
+    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
+});
+
+// Vista adicional para agrupar juzgados por extracto
+export const juzgadosPorExtracto = pgView("juzgados_por_extracto").as((qb) => {
+  return qb
+    .select({
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.name,
+      extractoKeySearch: extractos.key_search,
+      juzgados: sql<string>`json_agg(json_build_object(
+        'value', ${juzgados.value},
+        'name', ${juzgados.name},
+        'judge', ${juzgados.judge},
+        'id', ${juzgados.juzgadoId},
+        'key_search', ${extractos.key_search}
+      ) ORDER BY ${juzgados.value})`,
+      totalJuzgados: sql<number>`count(${juzgados.juzgadoId})`,
+    })
+    .from(extractos)
+    .leftJoin(juzgados, sql`${extractos.extractoId} = ${juzgados.extractoId}`)
+    .groupBy(extractos.extractoId, extractos.name, extractos.key_search);
+});
 
 // Tipos para las relaciones (opcional pero recomendado)
 export type Usuario = typeof usuarios.$inferSelect;
