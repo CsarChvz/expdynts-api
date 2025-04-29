@@ -1,7 +1,7 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 // schema.ts
-import { sql, relations } from "drizzle-orm";
+import { sql, relations, eq } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -12,6 +12,7 @@ import {
   pgEnum,
   uniqueIndex,
   pgView,
+  pgMaterializedView,
 } from "drizzle-orm/pg-core";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -31,7 +32,7 @@ export const extractos = createTable(
   "extractos",
   (d) => ({
     extractoId: d.varchar({ length: 50 }).primaryKey(), // "ZM", "PENALT", "FRNS", etc.
-    name: d.varchar({ length: 120 }).notNull(), // "Zona Metropolitana", "Penales", "Foraneos"
+    extracto_name: d.varchar({ length: 120 }).notNull(), // "Zona Metropolitana", "Penales", "Foraneos"
     key_search: d.varchar({ length: 100 }), // "zmg", "penal", "forean"
   }),
   (t) => [index("extractos_id_idx").on(t.extractoId)],
@@ -80,9 +81,6 @@ export const expedientes = createTable(
     index("expedientes_exp_idx").on(t.exp),
     index("expedientes_juzgado_idx").on(t.juzgadoId),
     index("expedientes_fecha_juzgado_idx").on(t.fecha, t.juzgadoId), // índice compuesto
-    index("expedientes_recent_idx")
-      .on(t.fecha)
-      .where(sql`fecha > NOW() - INTERVAL '30 days'`),
   ],
 );
 
@@ -117,9 +115,7 @@ export const usuarios = createTable(
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
   },
   (t) => [index("usuarios_email_idx").on(t.email)],
 );
@@ -241,7 +237,7 @@ export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
   expedientes: many(expedientes),
 }));
 
-// Vistas
+// Vistas -- Extracto, Juzgados y Expedientes
 // Vista 1: Expedientes completos con información de juzgado y extracto
 export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
   return qb
@@ -255,7 +251,7 @@ export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
       juzgadoNombre: juzgados.name,
       juzgadoValue: juzgados.value,
       extractoId: extractos.extractoId,
-      extractoNombre: extractos.name,
+      extractoNombre: extractos.extracto_name,
     })
     .from(expedientes)
     .leftJoin(juzgados, sql`${expedientes.juzgadoId} = ${juzgados.juzgadoId}`)
@@ -263,7 +259,9 @@ export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
 });
 
 // Vista completa para obtener juzgados en formato específico
-export const juzgadosFormateados = pgView("juzgados_formateados").as((qb) => {
+export const juzgadosFormateados = pgMaterializedView(
+  "juzgados_formateados",
+).as((qb) => {
   return qb
     .select({
       // Campos seleccionados según el formato requerido
@@ -274,14 +272,14 @@ export const juzgadosFormateados = pgView("juzgados_formateados").as((qb) => {
       key_search: extractos.key_search, // Ahora viene de extractos
       // Campos adicionales que pueden ser útiles
       extractoId: extractos.extractoId,
-      extractoNombre: extractos.name,
+      extractoNombre: extractos.extracto_name,
     })
     .from(juzgados)
     .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
 });
 
 // Vista simple y directa para obtener los juzgados en el formato requerido
-export const listaJuzgados = pgView("lista_juzgados").as((qb) => {
+export const listaJuzgados = pgMaterializedView("lista_juzgados").as((qb) => {
   return qb
     .select({
       value: juzgados.value,
@@ -294,12 +292,13 @@ export const listaJuzgados = pgView("lista_juzgados").as((qb) => {
     .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
 });
 
-// Vista adicional para agrupar juzgados por extracto
-export const juzgadosPorExtracto = pgView("juzgados_por_extracto").as((qb) => {
+export const juzgadosPorExtracto = pgMaterializedView(
+  "juzgados_por_extracto",
+).as((qb) => {
   return qb
     .select({
       extractoId: extractos.extractoId,
-      extractoNombre: extractos.name,
+      extractoNombre: extractos.extracto_name, // NOTA: Es "name", no "extracto_name"
       extractoKeySearch: extractos.key_search,
       juzgados: sql<string>`json_agg(json_build_object(
         'value', ${juzgados.value},
@@ -307,13 +306,85 @@ export const juzgadosPorExtracto = pgView("juzgados_por_extracto").as((qb) => {
         'judge', ${juzgados.judge},
         'id', ${juzgados.juzgadoId},
         'key_search', ${extractos.key_search}
-      ) ORDER BY ${juzgados.value})`,
-      totalJuzgados: sql<number>`count(${juzgados.juzgadoId})`,
+      ) ORDER BY ${juzgados.value})`.as("juzgados"), // <- alias obligatorio
+      totalJuzgados: sql<number>`count(${juzgados.juzgadoId})`.as(
+        "totalJuzgados",
+      ), // <- alias obligatorio
     })
     .from(extractos)
-    .leftJoin(juzgados, sql`${extractos.extractoId} = ${juzgados.extractoId}`)
-    .groupBy(extractos.extractoId, extractos.name, extractos.key_search);
+    .leftJoin(juzgados, eq(extractos.extractoId, juzgados.extractoId))
+    .groupBy(
+      extractos.extractoId,
+      extractos.extracto_name,
+      extractos.key_search,
+    );
 });
+
+//Vistas - Expedientes
+export const detalleExpedienteConHistorialAcuerdos = pgView(
+  "detalle_expediente_con_historial_acuerdos",
+).as((qb) => {
+  return qb
+    .select({
+      expedienteId: expedientes.expedienteId,
+      numeroExpediente: expedientes.exp,
+      fecha: expedientes.fecha,
+      url: expedientes.url,
+      acuerdosJson: sql`${expedientes.acuerdos_json}::text`.as("acuerdos_json"), // Convertir a texto para solucionar el problema
+
+      juzgadoId: juzgados.juzgadoId,
+      juzgadoNombre: juzgados.name,
+      juzgadoValue: juzgados.value,
+      juzgadoJudge: juzgados.judge,
+
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.extracto_name,
+      extractoKeySearch: extractos.key_search,
+
+      usuarioExpedienteId: usuarioExpedientes.usuarioExpedientesId,
+      usuarioId: usuarios.usuarioId,
+      usuarioEmail: usuarios.email,
+      nombreUsuario: usuarioAttributes.nombre_usuario,
+      apellidoUsuario: usuarioAttributes.apellido,
+      statusUsuarioExpediente: usuarioExpedientes.status,
+      fechaAsociacion: usuarioExpedientes.createdAt,
+    })
+    .from(expedientes)
+    .leftJoin(
+      usuarioExpedientes,
+      eq(expedientes.expedienteId, usuarioExpedientes.expedienteId),
+    )
+    .leftJoin(usuarios, eq(usuarioExpedientes.usuarioId, usuarios.usuarioId))
+    .leftJoin(
+      usuarioAttributes,
+      eq(usuarios.usuarioId, usuarioAttributes.usuarioAttributeId),
+    )
+    .leftJoin(juzgados, eq(expedientes.juzgadoId, juzgados.juzgadoId))
+    .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId));
+});
+
+export const historialDeExpedientes = pgView("historial_de_expedientes").as(
+  (qb) => {
+    return qb
+      .select({
+        expedienteId: usuarioExpedientes.expedienteId,
+        usuarioExpedienteId: usuarioExpedientes.usuarioExpedientesId,
+        acuerdosHistorialId: acuerdosHistorial.acuerdosHistorialId,
+        fechaHistorial: acuerdosHistorial.createdAt,
+        acuerdos: acuerdosHistorial.acuerdos,
+        cambiosRealizados: acuerdosHistorial.cambios_realizados,
+        hash: acuerdosHistorial.hash,
+      })
+      .from(acuerdosHistorial)
+      .leftJoin(
+        usuarioExpedientes,
+        eq(
+          acuerdosHistorial.usuarioExpedienteId,
+          usuarioExpedientes.usuarioExpedientesId,
+        ),
+      );
+  },
+);
 
 // Tipos para las relaciones (opcional pero recomendado)
 export type Usuario = typeof usuarios.$inferSelect;
