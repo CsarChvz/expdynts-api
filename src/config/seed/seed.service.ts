@@ -3,7 +3,7 @@ import { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { DATABASE_CONNECTION } from "src/database/database-connection";
 import * as schema from "../../database/schema";
 import extractos from "./data/extractos";
-import { Extractos, Juzgados } from "../types/seed.type";
+import { Extractos, Juzgados } from "@/common/types/seed.type";
 
 @Injectable()
 export class SeedService {
@@ -17,6 +17,7 @@ export class SeedService {
     await this.seedJuzgados();
     await this.database.refreshMaterializedView(schema.listaJuzgados);
     await this.database.refreshMaterializedView(schema.juzgadosFormateados);
+    await this.database.refreshMaterializedView(schema.extractosConJuzgados);
     console.log("Database seeded successfully");
   }
 

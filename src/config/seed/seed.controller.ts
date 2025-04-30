@@ -6,7 +6,7 @@ import { ApiTags } from "@nestjs/swagger";
 @Controller("seed")
 export class SeedController {
   constructor(private readonly seedService: SeedService) {}
-  @Post("seed")
+  @Post()
   async seedExtracto() {
     await this.seedService.seedDatabase();
   }

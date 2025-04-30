@@ -9,6 +9,7 @@ import { DataModule } from "./module/data/data.module";
 import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
 import { ScheduleModule } from "@nestjs/schedule";
+import { SeedModule } from "./config/seed/seed.module";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     QueueModule,
     CronModule,
     DataModule,
+    SeedModule,
   ],
 })
 export class AppModule {}
