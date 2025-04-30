@@ -284,6 +284,23 @@ export const listaJuzgados = pgMaterializedView("lista_juzgados").as((qb) =>
     .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId)),
 );
 
+export const extractosConJuzgados = pgMaterializedView(
+  "extractos_con_juzgados",
+).as((qb) =>
+  qb
+    .select({
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.extracto_name,
+      key_search: extractos.key_search,
+      juzgadoValue: juzgados.value,
+      juzgadoName: juzgados.name,
+      judge: juzgados.judge,
+      juzgadoId: juzgados.juzgadoId,
+    })
+    .from(extractos)
+    .leftJoin(juzgados, eq(extractos.extractoId, juzgados.extractoId)),
+);
+
 export const usuariosConExpedientesActivos = pgView(
   "usuarios_expedientes_activos",
 ).as((qb) =>
@@ -312,3 +329,12 @@ export type UsuarioExpedienteConExpediente = UsuarioExpedientes & {
 export type UsuarioAtributos = typeof usuarioAttributes.$inferInsert;
 export type Juzgado = typeof juzgados.$inferSelect;
 export type Extracto = typeof extractos.$inferSelect;
+export type ResultadoExpediente = UsuarioExpedientes & {
+  expediente: Expediente & {
+    juzgado:
+      | (Juzgado & {
+          extracto: Extracto;
+        })
+      | null;
+  };
+};
