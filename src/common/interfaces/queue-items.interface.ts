@@ -1,5 +1,5 @@
-import { ComparacionResultado } from "src/module/queue/types/expedientes.queue.t";
 import type { UsuarioExpedienteConExpediente } from "../../database/schema";
+import { ComparacionResultado } from "../types/expediente-queue.type";
 
 interface ExpQueueItem {
   id: string;

@@ -8,7 +8,7 @@ import { Job } from "bullmq";
 import { QUEUE_NAMES } from "../../../common/constants/queue.constants";
 import { NotificationQueueItem } from "src/common/interfaces/queue-items.interface";
 import { QueueService } from "../queue.service";
-import { ComparacionResultado } from "../types/expedientes.queue.t";
+import { ComparacionResultado } from "@/common/types/expediente-queue.type";
 
 interface NotificationJobResult {
   id: string;

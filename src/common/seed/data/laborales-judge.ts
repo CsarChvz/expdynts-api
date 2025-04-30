@@ -1,4 +1,4 @@
-import { Juzgados } from "@/lib/types/expedientes";
+import { Juzgados } from "@/common/types/seed.type";
 
 const optionsLaborales: Juzgados[] = [
   {
