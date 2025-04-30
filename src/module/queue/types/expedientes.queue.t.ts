@@ -17,6 +17,7 @@ interface ComparacionResultado {
       exp: number;
       fecha: number;
       cve_juz: string;
+      extractoId: string;
     };
     atributosUsuario: {
       telefono: string;

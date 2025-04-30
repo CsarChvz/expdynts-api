@@ -263,32 +263,31 @@ export class QueueService {
           with: {
             usuario: {
               with: {
-                attributes: {
-                  columns: {
-                    nombre_usuario: true,
-                    apellido: true,
-                    phoneNumber: true,
-                    preferencias: true,
-                  },
-                },
+                attributes: true,
               },
             },
             expediente: {
               columns: {
                 exp: true,
-                extracto: true,
-                cve_juz: true,
                 fecha: true,
+                cve_juz: true,
+                url: true,
+              },
+              with: {
+                juzgado: {
+                  with: {
+                    extracto: true,
+                  },
+                },
               },
             },
           },
         });
 
       if (
-        userExpediente?.expediente.exp !== undefined &&
-        userExpediente?.expediente.fecha !== undefined &&
-        userExpediente?.expediente.extracto !== undefined &&
-        userExpediente?.expediente.cve_juz !== undefined
+        userExpediente?.expediente?.exp !== undefined &&
+        userExpediente?.expediente?.fecha !== undefined &&
+        userExpediente?.expediente?.cve_juz !== undefined
       ) {
         return {
           nuevoRegistro: false,
@@ -297,12 +296,15 @@ export class QueueService {
           data: {
             cambiosRealizados,
             atributosUsuario: {
-              telefono: userExpediente?.usuario.attributes.phoneNumber ?? "",
+              telefono: userExpediente.usuario?.attributes?.phoneNumber ?? "",
             },
             expediente: {
               exp: userExpediente.expediente.exp,
               fecha: userExpediente.expediente.fecha,
-              cve_juz: userExpediente.expediente.cve_juz,
+              cve_juz: userExpediente.expediente.cve_juz ?? "",
+              // If you need extracto information, access it through the juzgado relation
+              extractoId:
+                userExpediente.expediente.juzgado?.extracto?.extractoId ?? "",
             },
           },
         };

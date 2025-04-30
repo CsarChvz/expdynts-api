@@ -8,14 +8,8 @@ import { ApiTags } from "@nestjs/swagger";
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Get()
-  async findAll() {
-    return await this.postsService.findAll();
-  }
-
-  @Get("proxy")
-  async getProxy() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await this.postsService.checkProxy();
+  @Get("historial")
+  historial() {
+    return this.postsService.getHistorialAcuerdos();
   }
 }

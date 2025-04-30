@@ -1,7 +1,4 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-// schema.ts
-import { sql, relations } from "drizzle-orm";
+import { sql, relations, eq } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -13,13 +10,10 @@ import {
   uniqueIndex,
   pgView,
   pgMaterializedView,
+  serial,
 } from "drizzle-orm/pg-core";
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
+
+// Creador con prefijo por proyecto
 export const createTable = pgTableCreator((name) => `expdynts_${name}`);
 
 // Enums
@@ -27,27 +21,26 @@ export const estadoExpediente = pgEnum("estado_expediente", [
   "ACTIVE",
   "ARCHIVED",
 ]);
-// Tabla de extractos (catálogo principal)
+
+// Tablas
 export const extractos = createTable(
   "extractos",
   (d) => ({
-    extractoId: d.varchar({ length: 50 }).primaryKey(), // "ZM", "PENALT", "FRNS", etc.
-    extracto_value: d.varchar({ length: 50 }), // "ZM", "PENALT", "FRNS", etc.
-    extracto_name: d.varchar({ length: 120 }).notNull(), // "Zona Metropolitana", "Penales", "Foraneos"
-    key_search: d.varchar({ length: 100 }), // "zmg", "penal", "forean"
+    extractoId: d.varchar({ length: 50 }).primaryKey(),
+    extracto_value: d.varchar({ length: 50 }),
+    extracto_name: d.varchar({ length: 120 }).notNull(),
+    key_search: d.varchar({ length: 100 }),
   }),
   (t) => [index("extractos_id_idx").on(t.extractoId)],
 );
 
-// Tabla de juzgados (subcatálogo relacionado con extractos)
-// ID compuesto como "{extractoId}-{value}" (por ejemplo: "ZM-F02", "PENALT-03P")
 export const juzgados = createTable(
   "juzgados",
   {
-    juzgadoId: varchar("juzgadoId", { length: 50 }).primaryKey(), // "ZM-F02", "PENALT-03P"
-    value: varchar("value", { length: 50 }).notNull(), // "F02", "03P"
-    name: varchar("name", { length: 255 }).notNull(), // "JUZGADO SEGUNDO DE LO FAMILIAR", "JUZGADO TERCERO DE LO PENAL"
-    judge: varchar("judge", { length: 100 }).notNull(), // "ZM", "PENALT" (igual al extractoId)
+    juzgadoId: varchar("juzgadoId", { length: 50 }).primaryKey(),
+    value: varchar("value", { length: 50 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    judge: varchar("judge", { length: 100 }).notNull(),
     extractoId: varchar("extracto_id", { length: 50 })
       .notNull()
       .references(() => extractos.extractoId, { onDelete: "cascade" }),
@@ -62,7 +55,7 @@ export const juzgados = createTable(
 export const expedientes = createTable(
   "expedientes",
   {
-    expedienteId: integer().primaryKey().generatedByDefaultAsIdentity(),
+    expedienteId: serial("expediente_id").primaryKey(),
     exp: integer("exp").notNull(),
     fecha: integer("fecha").notNull(),
     cve_juz: varchar("cve_juz", { length: 50 }).references(
@@ -79,36 +72,14 @@ export const expedientes = createTable(
   (t) => [
     index("expedientes_exp_idx").on(t.exp),
     index("expedientes_juzgado_idx").on(t.cve_juz),
-    index("expedientes_fecha_juzgado_idx").on(t.fecha, t.cve_juz), // índice compuesto
-  ],
-);
-
-export const acuerdosHistorial = createTable(
-  "acuerdos_historial",
-  {
-    acuerdosHistorialId: integer().primaryKey().generatedByDefaultAsIdentity(),
-    usuarioExpedienteId: integer("usuario_expediente_id")
-      .notNull()
-      .references(() => usuarioExpedientes.usuarioExpedientesId, {
-        onDelete: "cascade",
-      }),
-    acuerdos: json("acuerdos").notNull(),
-    hash: json("hash").notNull(),
-    cambios_realizados: json("cambios_realizados"),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-  },
-  (t) => [
-    index("acuerdos_historial_usuario_exp_idx").on(t.usuarioExpedienteId),
-    index("acuerdos_historial_created_idx").on(t.createdAt),
+    index("expedientes_fecha_juzgado_idx").on(t.fecha, t.cve_juz),
   ],
 );
 
 export const usuarios = createTable(
   "usuarios",
   {
-    usuarioId: integer().primaryKey().generatedByDefaultAsIdentity(),
+    usuarioId: serial("usuario_id").primaryKey(),
     externalId: varchar("external_id", { length: 255 }).unique(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     createdAt: timestamp("created_at")
@@ -130,7 +101,6 @@ export const usuarioAttributes = createTable(
     nombre_usuario: varchar("nombre_usuario", { length: 255 }),
     apellido: varchar("apellido", { length: 255 }),
     phoneNumber: varchar("phone_number", { length: 15 }),
-
     preferencias: json("preferencias"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
@@ -145,7 +115,7 @@ export const usuarioAttributes = createTable(
 export const usuarioExpedientes = createTable(
   "usuario_expedientes",
   {
-    usuarioExpedientesId: integer().primaryKey().generatedByDefaultAsIdentity(),
+    usuarioExpedientesId: serial("usuario_expedientes_id").primaryKey(),
     usuarioId: integer("usuario_id")
       .notNull()
       .references(() => usuarios.usuarioId, { onDelete: "cascade" }),
@@ -168,30 +138,53 @@ export const usuarioExpedientes = createTable(
   ],
 );
 
-// Relaciones para usuarios
+export const acuerdosHistorial = createTable(
+  "acuerdos_historial",
+  {
+    acuerdosHistorialId: serial("acuerdos_historial_id").primaryKey(),
+    usuarioExpedienteId: integer("usuario_expediente_id")
+      .notNull()
+      .references(() => usuarioExpedientes.usuarioExpedientesId, {
+        onDelete: "cascade",
+      }),
+    acuerdos: json("acuerdos").notNull(),
+    hash: json("hash").notNull(),
+    cambios_realizados: json("cambios_realizados"),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => [
+    index("acuerdos_historial_usuario_exp_idx").on(t.usuarioExpedienteId),
+    index("acuerdos_historial_created_idx").on(t.createdAt),
+  ],
+);
+
+// Relaciones
 export const usuariosRelations = relations(usuarios, ({ one, many }) => ({
   attributes: one(usuarioAttributes, {
     fields: [usuarios.usuarioId],
     references: [usuarioAttributes.usuarioAttributeId],
+    relationName: "attributes",
   }),
   expedientes: many(usuarioExpedientes),
 }));
 
-// Relaciones para usuarioAttributes
 export const usuarioAttributesRelations = relations(
   usuarioAttributes,
-  ({ one }) => ({
+  ({ one, many }) => ({
     usuario: one(usuarios, {
       fields: [usuarioAttributes.usuarioAttributeId],
       references: [usuarios.usuarioId],
+      relationName: "usuario",
     }),
+    usuarioExpedientes: many(usuarioExpedientes),
   }),
 );
 
-// Relaciones para usuarioExpedientes
 export const usuarioExpedientesRelations = relations(
   usuarioExpedientes,
-  ({ one }) => ({
+  ({ one, many }) => ({
     usuario: one(usuarios, {
       fields: [usuarioExpedientes.usuarioId],
       references: [usuarios.usuarioId],
@@ -200,36 +193,30 @@ export const usuarioExpedientesRelations = relations(
       fields: [usuarioExpedientes.expedienteId],
       references: [expedientes.expedienteId],
     }),
+    historialAcuerdos: many(acuerdosHistorial),
   }),
 );
 
-// Relaciones para expedientes
-export const expedientesRelations = relations(expedientes, ({ many, one }) => ({
-  historialAcuerdos: many(acuerdosHistorial),
-  usuarioExpedientes: many(usuarioExpedientes),
-  juzgado: one(juzgados, {
-    fields: [expedientes.cve_juz],
-    references: [juzgados.juzgadoId],
-  }),
-}));
-
-// Relaciones para acuerdosHistorial
 export const acuerdosHistorialRelations = relations(
   acuerdosHistorial,
   ({ one }) => ({
     usuarioExpediente: one(usuarioExpedientes, {
       fields: [acuerdosHistorial.usuarioExpedienteId],
       references: [usuarioExpedientes.usuarioExpedientesId],
+      relationName: "usuarioExpediente",
     }),
   }),
 );
 
-// Relaciones para extractos
-export const extractosRelations = relations(extractos, ({ many }) => ({
-  juzgados: many(juzgados),
+export const expedientesRelations = relations(expedientes, ({ one, many }) => ({
+  juzgado: one(juzgados, {
+    fields: [expedientes.cve_juz],
+    references: [juzgados.juzgadoId],
+  }),
+  usuarioExpedientes: many(usuarioExpedientes),
+  historialAcuerdos: many(acuerdosHistorial),
 }));
 
-// Relaciones para juzgados
 export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
   extracto: one(extractos, {
     fields: [juzgados.extractoId],
@@ -238,10 +225,13 @@ export const juzgadosRelations = relations(juzgados, ({ one, many }) => ({
   expedientes: many(expedientes),
 }));
 
-// Vistas -- Extracto, Juzgados y Expedientes
-// Vista 1: Expedientes completos con información de juzgado y extracto
-export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
-  return qb
+export const extractosRelations = relations(extractos, ({ many }) => ({
+  juzgados: many(juzgados),
+}));
+
+// Vistas
+export const expedientesCompletos = pgView("expedientes_completos").as((qb) =>
+  qb
     .select({
       expedienteId: expedientes.expedienteId,
       numero: expedientes.exp,
@@ -255,45 +245,59 @@ export const expedientesCompletos = pgView("expedientes_completos").as((qb) => {
       extractoNombre: extractos.extracto_name,
     })
     .from(expedientes)
-    .leftJoin(juzgados, sql`${expedientes.cve_juz} = ${juzgados.juzgadoId}`)
-    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
-});
+    .leftJoin(juzgados, eq(expedientes.cve_juz, juzgados.juzgadoId))
+    .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId)),
+);
 
-// Vista completa para obtener juzgados en formato específico
 export const juzgadosFormateados = pgMaterializedView(
   "juzgados_formateados",
-).as((qb) => {
-  return qb
-    .select({
-      // Campos seleccionados según el formato requerido
-      value: juzgados.value,
-      name: juzgados.name,
-      judge: juzgados.judge,
-      id: juzgados.juzgadoId, // Este es el campo "id" en tu resultado esperado
-      key_search: extractos.key_search, // Ahora viene de extractos
-      // Campos adicionales que pueden ser útiles
-      extractoId: extractos.extractoId,
-      extractoNombre: extractos.extracto_name,
-    })
-    .from(juzgados)
-    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
-});
-
-// Vista simple y directa para obtener los juzgados en el formato requerido
-export const listaJuzgados = pgMaterializedView("lista_juzgados").as((qb) => {
-  return qb
+).as((qb) =>
+  qb
     .select({
       value: juzgados.value,
       name: juzgados.name,
       judge: juzgados.judge,
       id: juzgados.juzgadoId,
-      key_search: extractos.key_search, // Ahora viene de extractos
+      key_search: extractos.key_search,
+      extractoId: extractos.extractoId,
+      extractoNombre: extractos.extracto_name,
     })
     .from(juzgados)
-    .leftJoin(extractos, sql`${juzgados.extractoId} = ${extractos.extractoId}`);
-});
+    .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId)),
+);
 
-// Tipos para las relaciones (opcional pero recomendado)
+export const listaJuzgados = pgMaterializedView("lista_juzgados").as((qb) =>
+  qb
+    .select({
+      value: juzgados.value,
+      name: juzgados.name,
+      judge: juzgados.judge,
+      id: juzgados.juzgadoId,
+      key_search: extractos.key_search,
+    })
+    .from(juzgados)
+    .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId)),
+);
+
+export const usuariosConExpedientesActivos = pgView(
+  "usuarios_expedientes_activos",
+).as((qb) =>
+  qb
+    .select({
+      usuarioId: usuarios.usuarioId,
+      email: usuarios.email,
+      expedienteId: usuarioExpedientes.expedienteId,
+      createdAt: usuarioExpedientes.createdAt,
+    })
+    .from(usuarios)
+    .innerJoin(
+      usuarioExpedientes,
+      eq(usuarios.usuarioId, usuarioExpedientes.usuarioId),
+    )
+    .where(eq(usuarioExpedientes.status, "ACTIVE")),
+);
+
+// Tipos inferidos
 export type Usuario = typeof usuarios.$inferSelect;
 export type Expediente = typeof expedientes.$inferSelect;
 export type UsuarioExpedientes = typeof usuarioExpedientes.$inferSelect;
