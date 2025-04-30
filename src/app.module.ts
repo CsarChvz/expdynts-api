@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { PostsModule } from "./posts/posts.module";
 import { CommonModule } from "./common/common.module";
 import { QueueModule } from "./module/queue/queue.module";
 import { CronModule } from "./module/cron/cron.module";
@@ -37,7 +36,6 @@ import { ScheduleModule } from "@nestjs/schedule";
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
-    PostsModule,
     CommonModule,
     QueueModule,
     CronModule,

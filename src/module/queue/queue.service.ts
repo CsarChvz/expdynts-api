@@ -9,7 +9,6 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { lastValueFrom } from "rxjs";
 import { JOB_NAMES, QUEUE_NAMES } from "src/common/constants/queue.constants";
 import {
-  ExpedienteObjeto,
   ExpQueueItem,
   NotificationQueueItem,
 } from "src/common/interfaces/queue-items.interface";
@@ -17,11 +16,12 @@ import { DATABASE_CONNECTION } from "src/database/database-connection";
 import * as schema from "../../database/schema";
 import { v4 as uuid } from "uuid";
 import { desc, eq } from "drizzle-orm";
+import { ExpedienteObjeto } from "@/common/types/expediente.type";
 import {
   Acuerdo,
   ComparacionResultado,
   PropsAcuerdos,
-} from "./types/expedientes.queue.t";
+} from "@/common/types/expediente-queue.type";
 
 @Injectable()
 export class QueueService {

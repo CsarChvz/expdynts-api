@@ -1,6 +1,7 @@
-import { ExpedienteObjeto } from "src/common/interfaces/queue-items.interface";
+import { ExpedienteObjeto } from "@/common/types/expediente.type";
 
 type Acuerdo = Record<string, any>; // flexible tipo JSON
+
 interface PropsAcuerdos {
   usuarioExpediente: number;
   hashNuevo: string;
