@@ -22,6 +22,8 @@ export const estadoExpediente = pgEnum("estado_expediente", [
   "ARCHIVED",
 ]);
 
+export const estadoJuzgado = pgEnum("estado_juzgado", ["ACTIVE", "ARCHIVED"]);
+
 // Tablas
 export const extractos = createTable(
   "extractos",
@@ -41,6 +43,9 @@ export const juzgados = createTable(
     value: varchar("value", { length: 50 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     judge: varchar("judge", { length: 100 }).notNull(),
+    status_juzgado: estadoExpediente("status_juzgado")
+      .default("ACTIVE")
+      .notNull(),
     extractoId: varchar("extracto_id", { length: 50 })
       .notNull()
       .references(() => extractos.extractoId, { onDelete: "cascade" }),

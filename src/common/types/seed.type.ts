@@ -4,6 +4,7 @@ interface Juzgados {
   judge: string;
   id: string;
   key_search: string;
+  extractoId?: string;
 }
 interface Extractos {
   id: string;
