@@ -1,4 +1,5 @@
 import { ExpedienteObjeto } from "@/common/types/expediente.type";
+import { JuzgadoExtracto } from "@/database/schema";
 
 type Acuerdo = Record<string, any>; // flexible tipo JSON
 
@@ -17,9 +18,8 @@ interface ComparacionResultado {
     expediente: {
       exp: number;
       fecha: number;
-      cve_juz: string;
-      extractoId: string;
     };
+    juzgado: JuzgadoExtracto;
     atributosUsuario: {
       telefono: string;
     };

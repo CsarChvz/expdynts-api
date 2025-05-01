@@ -283,11 +283,11 @@ export class QueueService {
             },
           },
         });
-
+      console.log(userExpediente?.expediente.juzgado);
       if (
         userExpediente?.expediente?.exp !== undefined &&
         userExpediente?.expediente?.fecha !== undefined &&
-        userExpediente?.expediente?.cve_juz !== undefined
+        userExpediente?.expediente?.juzgado !== null
       ) {
         return {
           nuevoRegistro: false,
@@ -301,11 +301,8 @@ export class QueueService {
             expediente: {
               exp: userExpediente.expediente.exp,
               fecha: userExpediente.expediente.fecha,
-              cve_juz: userExpediente.expediente.cve_juz ?? "",
-              // If you need extracto information, access it through the juzgado relation
-              extractoId:
-                userExpediente.expediente.juzgado?.extracto?.extractoId ?? "",
             },
+            juzgado: userExpediente?.expediente.juzgado,
           },
         };
       }
@@ -324,9 +321,8 @@ export class QueueService {
     acuerdosActuales: ExpedienteObjeto[] | undefined | null,
   ): ExpedienteObjeto[] {
     const cambios: ExpedienteObjeto[] = [];
-
     // Verificación defensiva: si alguno de los arreglos es null o undefined, los tratamos como vacíos
-    const anteriores = acuerdosAnteriores || [];
+    const anteriores = (acuerdosAnteriores as ExpedienteObjeto[]) || [];
     const actuales = acuerdosActuales || [];
 
     // Crear un mapa de los acuerdos anteriores usando una clave compuesta

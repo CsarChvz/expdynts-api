@@ -69,11 +69,6 @@ export class NotificationsConsumer extends WorkerHost {
 
       await job.updateProgress(50);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const { data } = content;
-      const expediente = data?.expediente;
-      const cambios = data?.cambiosRealizados ?? [];
-
       const textoWhatsApp = this.formatMessage(content);
 
       await this.queueService.sendNotification("/api/sendText", {
@@ -131,12 +126,14 @@ export class NotificationsConsumer extends WorkerHost {
 
     // Si tenemos datos para mostrar
     if (data.data) {
-      const { expediente, cambiosRealizados, atributosUsuario } = data.data;
+      const { expediente, cambiosRealizados, atributosUsuario, juzgado } =
+        data.data;
 
       // Información del expediente
       message += `*Expediente:* ${expediente.exp}\n`;
-      message += `*Fecha:* ${this.formatDate(expediente.fecha)}\n`;
-      message += `*Juzgado:* ${expediente.cve_juz}\n`;
+      message += `*Año:* ${expediente.fecha}\n`;
+      message += `*Juzgado:* ${juzgado.name}\n`;
+      message += `*Lugar:* ${juzgado.extracto.extracto_name}\n`;
 
       // Información de contacto
       if (atributosUsuario && atributosUsuario.telefono) {
@@ -154,11 +151,13 @@ export class NotificationsConsumer extends WorkerHost {
 
           // Fechas importantes
           if (cambio.FCH_PRO)
-            message += `• *Fecha de procedimiento:* ${cambio.FCH_PRO}\n`;
+            message += `• *Fecha de procedimiento:* ${this.formatDate(new Date(cambio.FCH_PRO).getTime())}\n`;
+
           if (cambio.FCH_ACU)
-            message += `• *Fecha de acuerdo:* ${cambio.FCH_ACU}\n`;
+            message += `• *Fecha de acuerdo:* ${this.formatDate(new Date(cambio.FCH_ACU).getTime())}\n`;
+
           if (cambio.FCH_RES)
-            message += `• *Fecha de resolución:* ${cambio.FCH_RES}\n`;
+            message += `• *Fecha de resolución:* ${this.formatDate(new Date(cambio.FCH_RES).getTime())}\n`;
 
           // Información de boletín
           if (cambio.BOLETIN)
@@ -167,15 +166,9 @@ export class NotificationsConsumer extends WorkerHost {
             message += `• *Boletín secundario:* ${cambio.BOLETIN2}\n`;
           if (cambio.BOLETIN3)
             message += `• *Boletín terciario:* ${cambio.BOLETIN3}\n`;
-
-          // Tipo y notificación
-          message += `• *Tipo:* ${cambio.TIPO}\n`;
-          message += `• *Notificación:* ${cambio.NOTIFICACI}\n`;
-          message += `• *DI:* ${cambio.DI}\n`;
-
           // Descripción
           if (cambio.DESCRIP) {
-            message += `• *Descripción:*\n  "${cambio.DESCRIP}"\n`;
+            message += `• *Descripción:* "${cambio.DESCRIP}"\n`;
           }
 
           // Personas involucradas

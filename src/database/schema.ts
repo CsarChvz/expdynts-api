@@ -329,6 +329,9 @@ export type UsuarioExpedienteConExpediente = UsuarioExpedientes & {
 export type UsuarioAtributos = typeof usuarioAttributes.$inferInsert;
 export type Juzgado = typeof juzgados.$inferSelect;
 export type Extracto = typeof extractos.$inferSelect;
+export type JuzgadoExtracto = Juzgado & {
+  extracto: Extracto;
+};
 export type ResultadoExpediente = UsuarioExpedientes & {
   expediente: Expediente & {
     juzgado:
