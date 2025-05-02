@@ -11,6 +11,13 @@ export class CronService {
   private readonly dataFetchInterval: string;
   private isEnabled = true;
 
+  /**
+   * Obtiene el estado actual de habilitación del servicio
+   */
+  getIsEnabled(): boolean {
+    return this.isEnabled;
+  }
+
   constructor(
     private readonly queueService: QueueService,
     @Inject(DATABASE_CONNECTION)
@@ -21,6 +28,14 @@ export class CronService {
     timeZone: "America/Mexico_City", // o la zona que necesites
   })
   async getExpsAndAddToQueue() {
+    // Verificar si el servicio está habilitado antes de ejecutar
+    if (!this.isEnabled) {
+      this.logger.log(
+        "[GET_AND_QUEUE] - Servicio deshabilitado, omitiendo ejecución.",
+      );
+      return { success: false, reason: "service_disabled" };
+    }
+
     await this.queueService.sendNotification("/api/sendText", {
       phone: "5213314825663",
       text: "Inicio de CRON y Colas [Job]",
@@ -82,6 +97,13 @@ export class CronService {
    */
   async triggerManualExecution() {
     this.logger.log("Ejecución manual solicitada");
+    // También verificamos si está habilitado antes de la ejecución manual
+    if (!this.isEnabled) {
+      this.logger.log(
+        "[MANUAL_EXECUTION] - Servicio deshabilitado, no se puede ejecutar.",
+      );
+      return { success: false, reason: "service_disabled" };
+    }
     return this.getExpsAndAddToQueue();
   }
 }
