@@ -1,33 +1,11 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Controller, Get, Post } from "@nestjs/common";
 import { CronService } from "./cron.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-
-// DTO para el cambio de estado del cron
-class SetCronStatusDto {
-  enabled: boolean;
-}
 
 @ApiTags("cron")
 @Controller("cron")
 export class CronController {
   constructor(private readonly cronService: CronService) {}
-
-  @Post("status")
-  @ApiOperation({
-    summary: "Establece el estado del servicio cron (habilitado/deshabilitado)",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Estado actualizado correctamente",
-    schema: {
-      properties: {
-        enabled: { type: "boolean" },
-      },
-    },
-  })
-  setCronStatus(@Body() statusDto: SetCronStatusDto) {
-    return this.cronService.setCronStatus(statusDto.enabled);
-  }
 
   @Get("status")
   @ApiOperation({ summary: "Obtiene el estado actual del servicio cron" })

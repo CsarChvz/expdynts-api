@@ -5,11 +5,13 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { DATABASE_CONNECTION } from "src/database/database-connection";
 import { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import * as schema from "../../database/schema";
+import { ConfigService } from "@nestjs/config";
+
 @Injectable()
 export class CronService {
   private readonly logger = new Logger(CronService.name);
   private readonly dataFetchInterval: string;
-  private isEnabled = true;
+  private readonly isEnabled: boolean;
 
   /**
    * Obtiene el estado actual de habilitación del servicio
@@ -22,24 +24,34 @@ export class CronService {
     private readonly queueService: QueueService,
     @Inject(DATABASE_CONNECTION)
     private readonly database: NeonHttpDatabase<typeof schema>,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // Inicializar el estado del cron desde la variable de entorno
+    this.isEnabled =
+      this.configService.get<string>("CRON_ENABLED", "true").toLowerCase() ===
+      "true";
+    this.logger.log(
+      `Servicio cron inicializado como: ${this.isEnabled ? "habilitado" : "deshabilitado"}`,
+    );
+  }
 
   @Cron(CronExpression.EVERY_DAY_AT_10AM, {
     timeZone: "America/Mexico_City", // o la zona que necesites
   })
   async getExpsAndAddToQueue() {
-    // Verificar si el servicio está habilitado antes de ejecutar
-
     await this.queueService.sendNotification("/api/sendText", {
       phone: "5213314825663",
       text: "Cron mandado a llamar",
     });
+
+    // Verificar si el servicio está habilitado antes de ejecutar
     if (!this.isEnabled) {
       this.logger.log(
         "[GET_AND_QUEUE] - Servicio deshabilitado, omitiendo ejecución.",
       );
       return { success: false, reason: "service_disabled" };
     }
+
     try {
       this.logger.log(
         "[GET_AND_QUEUE] - Obtener registros y agregarlos a la cola.",
@@ -82,14 +94,6 @@ export class CronService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       return { success: false, error: error.message };
     }
-  }
-  /**
-   * Habilita o deshabilita la ejecución de tareas programadas
-   */
-  setCronStatus(enabled: boolean) {
-    this.isEnabled = enabled;
-    this.logger.log(`Cron ${enabled ? "habilitado" : "deshabilitado"}`);
-    return { enabled: this.isEnabled };
   }
 
   /**
