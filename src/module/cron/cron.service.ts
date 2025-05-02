@@ -29,17 +29,17 @@ export class CronService {
   })
   async getExpsAndAddToQueue() {
     // Verificar si el servicio está habilitado antes de ejecutar
+
+    await this.queueService.sendNotification("/api/sendText", {
+      phone: "5213314825663",
+      text: "Cron mandado a llamar",
+    });
     if (!this.isEnabled) {
       this.logger.log(
         "[GET_AND_QUEUE] - Servicio deshabilitado, omitiendo ejecución.",
       );
       return { success: false, reason: "service_disabled" };
     }
-
-    await this.queueService.sendNotification("/api/sendText", {
-      phone: "5213314825663",
-      text: "Inicio de CRON y Colas [Job]",
-    });
     try {
       this.logger.log(
         "[GET_AND_QUEUE] - Obtener registros y agregarlos a la cola.",
