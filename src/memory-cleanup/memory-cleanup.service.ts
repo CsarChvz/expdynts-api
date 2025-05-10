@@ -11,6 +11,7 @@ export class MemoryCleanupService {
   async handleMemoryCleanup() {
     // Forzar recolección de basura si está disponible
     if (global.gc) {
+      console.log("ESTA DISPONIBLE");
       global.gc();
     }
 

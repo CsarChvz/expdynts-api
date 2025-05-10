@@ -5,7 +5,6 @@ import { CommonModule } from "./common/common.module";
 import { QueueModule } from "./module/queue/queue.module";
 import { CronModule } from "./module/cron/cron.module";
 import { BullModule } from "@nestjs/bullmq";
-import { DataModule } from "./module/data/data.module";
 import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -41,7 +40,6 @@ import { MemoryCleanupService } from "./memory-cleanup/memory-cleanup.service";
     CommonModule,
     QueueModule,
     CronModule,
-    DataModule,
     SeedModule,
   ],
   providers: [MemoryCleanupService],
