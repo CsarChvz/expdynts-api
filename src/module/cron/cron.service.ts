@@ -13,6 +13,13 @@ export class CronService {
   private readonly dataFetchInterval: string;
   private readonly isEnabled: boolean;
 
+  // Usar WeakMap para almacenar datos temporales asociados a objetos
+  // Las claves deben ser objetos, no valores primitivos
+  private expedienteCache = new WeakMap<object, any>();
+
+  // WeakSet para rastrear objetos procesados sin prevenir la recolección de basura
+  private processedItems = new WeakSet<object>();
+
   /**
    * Obtiene el estado actual de habilitación del servicio
    */
@@ -56,8 +63,8 @@ export class CronService {
       this.logger.log(
         "[GET_AND_QUEUE] - Obtener registros y agregarlos a la cola.",
       );
-
       this.logger.log("[GET_EXPEDIENTES] - Se obtienen los expedientes");
+
       const itemsExpedientes =
         await this.database.query.usuarioExpedientes.findMany({
           with: {
@@ -69,16 +76,47 @@ export class CronService {
         `Obtenidos ${itemsExpedientes.length} elementos para procesar`,
       );
 
-      const addPromises = itemsExpedientes.map((item) =>
-        this.queueService.addToExpsQueue({
-          id: `exp-${item.expedienteId}`,
-          data: item,
-          status: "pending",
-        }),
-      );
+      // Usamos un array temporal para procesar los elementos
+      const processingPromises: Promise<void>[] = [];
 
-      this.logger.log("[QUEUE] - Se ingregan en la cola de expedientes");
-      await Promise.all(addPromises);
+      for (const item of itemsExpedientes) {
+        // Creamos un objeto wrapper para poder usar WeakMap/WeakSet
+        // (necesitamos un objeto, no un valor primitivo)
+        const itemWrapper = { data: item };
+
+        // Guardamos datos temporales en WeakMap para uso durante el procesamiento
+        this.expedienteCache.set(itemWrapper, {
+          processingStartTime: Date.now(),
+          expedienteId: item.expedienteId,
+        });
+
+        const promise = this.queueService
+          .addToExpsQueue({
+            id: `exp-${item.expedienteId}`,
+            data: item,
+            status: "pending",
+          })
+          .then(() => {
+            // Marcar como procesado usando WeakSet
+            this.processedItems.add(itemWrapper);
+
+            // Liberar memoria explícitamente eliminando del cache
+            this.expedienteCache.delete(itemWrapper);
+          });
+
+        processingPromises.push(promise);
+      }
+
+      this.logger.log("[QUEUE] - Se agregan en la cola de expedientes");
+      await Promise.all(processingPromises);
+
+      // Forzar la limpieza de las referencias para ayudar al GC
+      const tempItemsExpedientes = itemsExpedientes;
+
+      // Este es un truco para ayudar al GC (vaciar el array antes de eliminarlo)
+      while (tempItemsExpedientes.length > 0) {
+        tempItemsExpedientes.pop();
+      }
 
       const queueMetrics = await this.queueService.getQueueMetrics();
       this.logger.debug(
@@ -108,6 +146,20 @@ export class CronService {
       );
       return { success: false, reason: "service_disabled" };
     }
+
     return this.getExpsAndAddToQueue();
+  }
+
+  /**
+   * Helper para limpiar memoria explícitamente
+   */
+  cleanupMemory() {
+    // WeakMap y WeakSet no necesitan limpieza manual
+    // Sus elementos se limpiarán cuando no existan otras referencias
+
+    // Forzar GC si está disponible
+    if (global.gc) {
+      global.gc();
+    }
   }
 }
