@@ -6,7 +6,6 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 
-import fastifyCaching from "@fastify/caching";
 import compression from "@fastify/compress";
 import fastifyEtag from "@fastify/etag";
 import fastifyCors from "@fastify/cors";
@@ -37,11 +36,6 @@ async function bootstrap() {
 
   await app.register(fastifyEtag, {
     weak: true,
-  });
-
-  await app.register(fastifyCaching, {
-    privacy: "private",
-    expiresIn: 3600,
   });
 
   const config = new DocumentBuilder()

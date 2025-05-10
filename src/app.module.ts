@@ -10,6 +10,7 @@ import configuration from "./config/configuration";
 import { DatabaseModule } from "./database/database.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { SeedModule } from "./config/seed/seed.module";
+import { MemoryCleanupService } from "./memory-cleanup/memory-cleanup.service";
 
 @Module({
   imports: [
@@ -43,5 +44,6 @@ import { SeedModule } from "./config/seed/seed.module";
     DataModule,
     SeedModule,
   ],
+  providers: [MemoryCleanupService],
 })
 export class AppModule {}
