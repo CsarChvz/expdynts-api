@@ -10,4 +10,9 @@ export class SeedController {
   async seedExtracto() {
     await this.seedService.seedDatabase();
   }
+
+  @Post("vistas")
+  async actualizarVistas() {
+    await this.seedService.actualizarVistas();
+  }
 }

@@ -284,6 +284,10 @@ export const listaJuzgados = pgMaterializedView("lista_juzgados").as((qb) =>
     .leftJoin(extractos, eq(juzgados.extractoId, extractos.extractoId)),
 );
 
+export const listaExtractos = pgMaterializedView("lista_extractos").as((qb) =>
+  qb.select().from(extractos),
+);
+
 export const extractosConJuzgados = pgMaterializedView(
   "extractos_con_juzgados",
 ).as((qb) =>

@@ -92,4 +92,11 @@ export class SeedService {
       console.log("No new juzgados to insert.");
     }
   }
+
+  async actualizarVistas() {
+    await this.database.refreshMaterializedView(schema.listaJuzgados);
+    await this.database.refreshMaterializedView(schema.listaExtractos);
+    await this.database.refreshMaterializedView(schema.juzgadosFormateados);
+    await this.database.refreshMaterializedView(schema.extractosConJuzgados);
+  }
 }
