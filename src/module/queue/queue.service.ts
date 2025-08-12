@@ -151,7 +151,8 @@ export class QueueService {
     const port = "10000"
 
     const httpsAgent = new HttpsProxyAgent(
-      `http://${login}:${password}@${host}:${port}/`,
+      //`http://${login}:${password}@${host}:${port}/`,
+      'http://user-sp6wi7cxza-country-us:TbEbDuxa+br1W84p0b@dc.decodo.com:10000'
     );
 
     const result = await lastValueFrom(
