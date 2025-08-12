@@ -144,7 +144,7 @@ export class QueueService {
     const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
-    const port = "22225";
+    const port = "33335";
 
     const httpsAgent = new HttpsProxyAgent(
       `http://${login}:${password}@${host}:${port}/`,
