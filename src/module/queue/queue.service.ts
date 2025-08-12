@@ -149,11 +149,11 @@ export class QueueService {
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
     const port = "33335";
-    
+
     const httpsAgent = new HttpsProxyAgent(
       `http://${login}:${password}@${host}:${port}/`,
     );
-
+    this.logger.debug(url)
     const result = await lastValueFrom(
       this.httpService.get(url, {
         httpsAgent,
