@@ -22,6 +22,7 @@ import {
   ComparacionResultado,
   PropsAcuerdos,
 } from "@/common/types/expediente-queue.type";
+import { Agent as HttpsAgent } from 'https';
 
 @Injectable()
 export class QueueService {
@@ -140,27 +141,68 @@ export class QueueService {
     };
   }
 
+//   async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
+//     // const login = "16cf03845dd5e865a454";
+//     // const password = "94aa021cc280eb2f";
+//     // const host = "gw.dataimpulse.com";
+//     // const port = "823";
+//     const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
+//     const password = "ffz23tieylxi";
+//     const host = "brd.superproxy.io";
+//     const port = "33335";
+//     const agentOptions = {
+//       rejectUnauthorized: false
+//     };
+
+//     const httpsAgent = new HttpsProxyAgent(
+//       `http://${login}:${password}@${host}:${port}/`, 
+// {
+//         // En `https-proxy-agent`, las opciones del agente interno se pasan
+//         // a través de la propiedad `agent` o directamente en las opciones.
+//         // La versión 7+ del paquete acepta estas opciones directamente.
+//         // https://www.npmjs.com/package/https-proxy-agent#agent-options
+//         ...agentOptions
+//       }
+//     );
+
+//     this.logger.debug(url)
+//     const result = await lastValueFrom(
+//       this.httpService.get(url, {
+//         httpsAgent,
+        
+//       }),
+//     );
+//     return result.data.data;
+//   }
+
   async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
-    // const login = "16cf03845dd5e865a454";
-    // const password = "94aa021cc280eb2f";
-    // const host = "gw.dataimpulse.com";
-    // const port = "823";
     const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
-    const port = "33335";
+    const port = 33335;
 
-    const httpsAgent = new HttpsProxyAgent(
-      `http://${login}:${password}@${host}:${port}/`,
-    );
-    this.logger.debug(url)
+    this.logger.debug(url);
     const result = await lastValueFrom(
       this.httpService.get(url, {
-        httpsAgent,
+        // Configuración de proxy de Axios.
+        proxy: {
+          host: host,
+          port: port,
+          protocol: 'http', // O 'https' si el proxy es HTTPS
+          auth: {
+            username: login,
+            password: password,
+          },
+        },
+        // HttpsAgent se usa para la conexión final con el servidor de destino.
+        // Si el proxy es HTTPS, también se aplica a esa conexión.
+        httpsAgent: new HttpsAgent({ rejectUnauthorized: false }),
       }),
     );
     return result.data.data;
   }
+
+
 
   async sendNotification(
     endPoint: string,
