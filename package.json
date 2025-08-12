@@ -54,6 +54,7 @@
     "drizzle-orm": "^0.41.0",
     "esbuild": "^0.25.2",
     "fastify-compress": "^4.1.0",
+    "hpagent": "^1.2.0",
     "https-proxy-agent": "^7.0.6",
     "package.json": "^2.0.1",
     "pg": "^8.14.1",
