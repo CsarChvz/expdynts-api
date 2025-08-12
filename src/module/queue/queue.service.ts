@@ -141,18 +141,14 @@ export class QueueService {
   }
 
   async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
-    // const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
-    // const password = "ffz23tieylxi";
-    // const host = "brd.superproxy.io";
-    // const port = "33335";  
-    const login = "user-sp6wi7cxza-country-us"
-    const password = "TbEbDuxa+br1W84p0b"
-    const host = "dc.decodo.com"
-    const port = "10000"
+    const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
+    const password = "ffz23tieylxi";
+    const host = "brd.superproxy.io";
+    const port = "22225";
 
     const httpsAgent = new HttpsProxyAgent(
-      //`http://${login}:${password}@${host}:${port}/`,
-      'http://user-sp6wi7cxza-country-us:TbEbDuxa+br1W84p0b@dc.decodo.com:10000'
+      `http://${login}:${password}@${host}:${port}/`,
+
     );
 
     const result = await lastValueFrom(
