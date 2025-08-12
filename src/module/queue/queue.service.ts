@@ -175,33 +175,31 @@ export class QueueService {
 //     return result.data.data;
 //   }
 
-  async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
+ async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
     const login = "brd-customer-hl_6e97d2e6-zone-try-country-mx";
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
-    const port = 33335;
+    const port = "33335";
+
+    // Se crea el agente de proxy. Esta es la forma más limpia y compatible.
+    const proxyAgent = new HttpsProxyAgent(
+      `http://${login}:${password}@${host}:${port}/`,
+      {
+        // Se le pasa la opción para ignorar la validación SSL al agente de proxy
+        rejectUnauthorized: false
+      }
+    );
 
     this.logger.debug(url);
     const result = await lastValueFrom(
       this.httpService.get(url, {
-        // Configuración de proxy de Axios.
-        proxy: {
-          host: host,
-          port: port,
-          protocol: 'http', // O 'https' si el proxy es HTTPS
-          auth: {
-            username: login,
-            password: password,
-          },
-        },
-        // HttpsAgent se usa para la conexión final con el servidor de destino.
-        // Si el proxy es HTTPS, también se aplica a esa conexión.
-        httpsAgent: new HttpsAgent({ rejectUnauthorized: false }),
+        // En lugar de usar la configuración 'proxy' de Axios,
+        // se le pasa el agente de proxy directamente.
+        httpsAgent: proxyAgent,
       }),
     );
     return result.data.data;
   }
-
 
 
   async sendNotification(
