@@ -141,10 +141,10 @@ export class QueueService {
   }
 
   async fetchExpediente(url: string): Promise<ExpedienteObjeto[]> {
-    const login = "a698053eb4a3eeaabac6";
-    const password = "9ce98dafba032b0f";
-    const host = "gw.dataimpulse.com";
-    const port = "823";
+    const login = "brd-customer-hl_6e97d2e6-zone-try";
+    const password = "ffz23tieylxi";
+    const host = "brd.superproxy.io";
+    const port = "33335";
 
     const httpsAgent = new HttpsProxyAgent(
       `http://${login}:${password}@${host}:${port}/`,
