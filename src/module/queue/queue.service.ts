@@ -5,8 +5,7 @@ import { InjectQueue } from "@nestjs/bullmq";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Queue, QueueEvents } from "bullmq";
 import { NeonHttpDatabase } from "drizzle-orm/neon-http";
-//import { HttpsProxyAgent } from "https-proxy-agent";
-import { HttpsProxyAgent } from 'hpagent';
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { lastValueFrom } from "rxjs";
 import { JOB_NAMES, QUEUE_NAMES } from "src/common/constants/queue.constants";
 import {
@@ -23,7 +22,6 @@ import {
   ComparacionResultado,
   PropsAcuerdos,
 } from "@/common/types/expediente-queue.type";
-import { readFileSync } from "fs";
 
 @Injectable()
 export class QueueService {
@@ -147,15 +145,11 @@ export class QueueService {
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
     const port = "33335";
-    const brightDataCaCert = readFileSync('./certs/bright-data-ca.crt');
-    const httpsAgent = new HttpsProxyAgent({
-      keepAlive: true,
-      maxSockets: 25,
-      maxFreeSockets: 25,
-      proxy: `http://${login}:${password}@${host}:${port}`,
-      // ¡Aquí está la clave! Pasa el certificado para que Axios confíe en el proxy
-      ca: [brightDataCaCert], 
-    });
+
+    const httpsAgent = new HttpsProxyAgent(
+      `http://${login}:${password}@${host}:${port}/`,
+    );
+
     const result = await lastValueFrom(
       this.httpService.get(url, {
         httpsAgent,
