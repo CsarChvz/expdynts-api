@@ -22,11 +22,16 @@ import {
   ComparacionResultado,
   PropsAcuerdos,
 } from "@/common/types/expediente-queue.type";
+import { readFileSync } from 'fs';
+import { promisify } from "util";
+import { exec } from 'child_process';
+const execAsync = promisify(exec);
 
 @Injectable()
 export class QueueService {
   private readonly logger = new Logger(QueueService.name);
   private queueEvents: QueueEvents;
+  private brightDataCaCert = readFileSync('./certs/bright-data-ca.crt');
 
   constructor(
     @InjectQueue(QUEUE_NAMES.EXPS) private expsQueue: Queue<ExpQueueItem>,
@@ -145,17 +150,20 @@ export class QueueService {
     const password = "ffz23tieylxi";
     const host = "brd.superproxy.io";
     const port = "33335";
+    const certPath = "./certs/bright-data-ca.crt";
 
-    const httpsAgent = new HttpsProxyAgent(
-      `http://${login}:${password}@${host}:${port}/`,
-    );
-
-    const result = await lastValueFrom(
-      this.httpService.get(url, {
-        httpsAgent,
-      }),
-    );
-    return result.data.data;
+    const curlCommand = `curl --proxy ${host}:${port} --proxy-user ${login}:${password} --cacert ${certPath} "${url}"`;
+    
+    try {
+      const { stdout, stderr } = await execAsync(curlCommand);
+      if (stderr) {
+        throw new Error(`Curl error: ${stderr}`);
+      }
+      const result = JSON.parse(stdout);
+      return result.data || result;
+    } catch (error) {
+      throw new Error(`Error executing curl: ${error.message}`);
+    }
   }
 
   async sendNotification(
